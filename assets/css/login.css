@@ -1,0 +1,179 @@
+/* ===================================
+   LOGIN PAGE STYLES
+   InternFinder - Authentication
+   =================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap');
+
+/* ===================================
+   BASE STYLES
+   =================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Sarabun", sans-serif;
+}
+
+body {
+    background: #f5f7fa;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* ===================================
+   LOGIN CONTAINER
+   =================================== */
+
+.login-container {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #dfe5ec;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    max-width: 420px;
+    width: 100%;
+}
+
+/* ===================================
+   LOGIN HEADER
+   =================================== */
+
+.login-header {
+    background: #1E88E5;
+    padding: 35px 25px;
+    text-align: center;
+    color: white;
+    border-radius: 10px 10px 0 0;
+}
+
+.login-header h1 {
+    font-size: 26px;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.login-header p {
+    font-size: 15px;
+    opacity: 0.95;
+}
+
+/* ===================================
+   LOGIN BODY
+   =================================== */
+
+.login-body {
+    padding: 35px 30px;
+}
+
+/* ===================================
+   FORM STYLES
+   =================================== */
+
+.form-group {
+    margin-bottom: 22px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #bfc9d4;
+    border-radius: 6px;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+
+.form-group input:focus {
+    border-color: #1E88E5;
+    box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.15);
+    outline: none;
+}
+
+/* ===================================
+   USER TYPE SELECTOR
+   =================================== */
+
+.user-type-selector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.user-type-option {
+    flex: 1;
+    position: relative;
+}
+
+.user-type-option input[type="radio"] {
+    display: none;
+}
+
+.user-type-option label {
+    display: block;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #bfc9d4;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 500;
+    background: #ffffff;
+    color: #555;
+}
+
+.user-type-option input[type="radio"]:checked+label {
+    background: #1E88E5;
+    color: white;
+    border-color: #1E88E5;
+    box-shadow: 0 2px 5px rgba(30, 136, 229, 0.3);
+}
+
+/* ===================================
+   LOGIN BUTTON
+   =================================== */
+
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: #1E88E5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+    margin-top: 10px;
+}
+
+.btn-login:hover {
+    background: #1565C0;
+}
+
+/* ===================================
+   ERROR MESSAGE
+   =================================== */
+
+.error-message {
+    background: #fdeaea;
+    color: #c62828;
+    padding: 10px 13px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid #e0b4b4;
+    text-align: center;
+}

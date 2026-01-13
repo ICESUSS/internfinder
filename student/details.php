@@ -1,0 +1,132 @@
+<?php
+session_start();
+include '../config.php';
+
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$company = null;
+
+if ($id > 0) {
+    $stmt = $conn->prepare("SELECT * FROM tb_company WHERE com_id = ? LIMIT 1");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $company = $res->fetch_assoc();
+    $stmt->close();
+
+    // Load job details from tb_company_detail
+    $jobs = [];
+    if ($company) {
+        $jstmt = $conn->prepare("SELECT * FROM tb_company_detail WHERE com_id = ? ORDER BY job_title ASC");
+        if ($jstmt) {
+            $jstmt->bind_param('i', $id);
+            $jstmt->execute();
+            $jres = $jstmt->get_result();
+            while ($jr = $jres->fetch_assoc()) {
+                $jobs[] = $jr;
+            }
+            $jstmt->close();
+        }
+    }
+} else {
+    $jobs = [];
+} 
+?>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายละเอียดสถานประกอบการ</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../assets/css/details.css">
+<link rel="stylesheet" href="../assets/css/mobile-responsive.css">
+</head>
+
+<body>
+
+<header>
+    <a href="dashboard.php" style="color:#fff;text-decoration:none;">← กลับ</a>
+</header>
+
+<div class="container">
+
+<?php if(!$company): ?>
+    <div class="card">ไม่พบข้อมูลสถานประกอบการ</div>
+<?php else: ?>
+
+<div class="grid">
+
+    <!-- 🔹 ซ้าย : รายละเอียด -->
+    <div class="card">
+        <span class="badge">รับนักศึกษาฝึกงาน</span>
+        <h1><?= htmlspecialchars($company['com_name']) ?></h1>
+        <p class="info"><i class="fas fa-industry"></i> เทคโนโลยี / Software</p>
+
+        <h3>ข้อมูลการติดต่อ</h3>
+        <p class="info">
+            <i class="fas fa-user"></i>
+            <?= htmlspecialchars($company['com_contact'] ?: '-') ?>
+        </p>
+
+        <h3>ที่อยู่</h3>
+        <p class="info">
+            <?= nl2br(htmlspecialchars($company['com_address'])) ?>
+        </p>
+
+        <h3>ตำแหน่งฝึกงาน</h3>
+        <?php if (!empty($jobs)): ?>
+            <?php foreach ($jobs as $job): ?>
+                <div class="job-card">
+                    <h4><?= htmlspecialchars($job['job_title']) ?> <span class="job-type"><?= htmlspecialchars($job['job_type']) ?></span></h4>
+                    <p class="info"><strong>รายละเอียด:</strong> <?= nl2br(htmlspecialchars($job['job_description'])) ?></p>
+                    <p class="info"><strong>คุณสมบัติ:</strong> <?= nl2br(htmlspecialchars($job['job_qualification'])) ?></p>
+                    <p class="info"><strong>สวัสดิการ:</strong> <?= nl2br(htmlspecialchars($job['job_welfare'])) ?> — <strong>เบี้ยเลี้ยง:</strong> <?= htmlspecialchars($job['allowance']) ?></p>
+                    <p class="info"><strong>เวลาทำงาน:</strong> <?= htmlspecialchars($job['work_time']) ?> (<?= htmlspecialchars($job['work_day']) ?>)</p>
+                    <div style="margin-top: 15px;">
+                        <a href="apply_job.php?id=<?= $job['detail_id'] ?>" class="btn" style="background-color: #2ecc71; padding: 8px 20px; font-size: 14px;">สมัครงาน</a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p class="info">ไม่มีตำแหน่งงานที่ประกาศในขณะนี้</p>
+        <?php endif; ?>
+    </div>
+
+    <!-- 🔹 ขวา : การ์ดบริษัท -->
+    <div class="card" style="text-align:center">
+        <?php
+            // Determine logo file path and use safe basename to prevent path traversal
+            $logo_path = '';
+            if (!empty($company['com_img'])) {
+                $candidate = 'uploads/companies/' . basename($company['com_img']);
+                if (file_exists($candidate)) $logo_path = $candidate;
+            }
+        ?>
+
+        <?php
+        $img = !empty($company['com_img'])
+            ? "../uploads/companies/".basename($company['com_img'])
+            : "../uploads/companies/default.png";
+        ?>
+
+        <img src="<?= htmlspecialchars($img, ENT_QUOTES, 'UTF-8') ?>"
+             style="width:80px;height:80px;border-radius:12px;
+                    object-fit:cover;border:1px solid #eee;">
+
+        <h3 style="margin-top:12px">
+            <?= htmlspecialchars($company['com_name']) ?>
+        </h3>
+
+        <p class="info">
+            <i class="fas fa-phone"></i>
+            <?= htmlspecialchars($company['com_tel']) ?>
+        </p>
+
+    </div>
+
+</div>
+<?php endif; ?>
+
+</div>
+</body>
+</html>

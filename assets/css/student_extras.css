@@ -1,0 +1,18 @@
+.save-btn { margin-left: auto; color: #2196F3; font-size: 1.2rem; background:none;border:none;padding:0;cursor:pointer; }
+.save-btn i.fas { color: #e53935; }
+.save-btn:focus { outline: 2px solid rgba(33,150,243,0.18); border-radius: 6px; }
+
+.sidebar .sidebar-profile-link { display:block; text-decoration:none; color:inherit; }
+.sidebar .sidebar-profile-link:hover { background: #f5f7fb; }
+
+/* Profile page helpers */
+.profile-card { max-width: 900px; margin: 18px auto; }
+.profile-main { display:flex; gap:18px; align-items:flex-start; }
+.profile-left { width: 220px; background:#fff; padding:16px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+.profile-right { flex:1; background:#fff; padding:16px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+.profile-left .avatar { width:100px;height:100px;border-radius:50%;background:#eef2f7; display:flex;align-items:center;justify-content:center;font-weight:700;color:#2196F3;margin:0 auto 8px auto; }
+.form-row { display:flex; gap:12px; }
+.form-row .col { flex:1; }
+input, select, textarea { width:100%; padding:8px; border:1px solid #e6e9ef; border-radius:8px; box-sizing:border-box; }
+button.save { background:#2196F3;color:#fff;border:none;padding:10px 16px;border-radius:8px; }
+.msg { padding:10px;background:#e8f5e9;color:#2e7d32;border-radius:8px;margin-bottom:12px; }

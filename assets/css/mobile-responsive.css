@@ -1,0 +1,835 @@
+/* ===================================
+   MOBILE RESPONSIVE STYLES
+   InternFinder - Mobile First Approach
+   =================================== */
+
+/* Base Mobile Styles */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Touch-friendly elements */
+button, 
+a, 
+input, 
+select, 
+textarea {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* ===================================
+   HEADER / NAVBAR - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    header {
+        padding: 10px 15px !important;
+        height: auto !important;
+        min-height: 56px;
+    }
+    
+    .logo {
+        font-size: 1.2rem !important;
+    }
+    
+    .menu-icon {
+        font-size: 1.3rem !important;
+        padding: 10px;
+        margin-left: -10px;
+    }
+    
+    .navbar-right {
+        gap: 8px !important;
+    }
+    
+    .user-avatar {
+        width: 36px !important;
+        height: 36px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 8px 12px !important;
+    }
+    
+    .logo {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* ===================================
+   SIDEBAR - Mobile
+   =================================== */
+
+@media (max-width: 900px) {
+    .sidebar {
+        width: 280px !important;
+        max-width: 85vw;
+    }
+    
+    main {
+        margin-left: 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        width: 100% !important;
+        max-width: 100%;
+    }
+    
+    .sidebar-profile {
+        padding: 15px !important;
+    }
+    
+    .profile-avatar {
+        width: 48px !important;
+        height: 48px !important;
+    }
+    
+    .nav-item {
+        padding: 14px 16px !important;
+        font-size: 1rem;
+    }
+}
+
+/* ===================================
+   MAIN CONTENT - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    main {
+        padding: 15px 10px !important;
+    }
+    
+    .container {
+        padding: 0 10px !important;
+        max-width: 100% !important;
+    }
+    
+    h1 {
+        font-size: 1.4rem !important;
+        line-height: 1.3;
+    }
+    
+    h2 {
+        font-size: 1.2rem !important;
+        margin-top: 25px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .page-title-group {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        padding-bottom: 15px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    main {
+        padding: 10px 8px !important;
+    }
+    
+    h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    h2 {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* ===================================
+   FILTER BAR - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .filter-bar {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        padding: 12px !important;
+    }
+    
+    .filter-bar select,
+    .filter-bar input,
+    .filter-bar button {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+    
+    .search-input {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        order: -1;
+    }
+    
+    .btn-filter {
+        padding: 10px 12px !important;
+        font-size: 0.85rem !important;
+        min-width: 100px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-bar {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    .filter-bar select,
+    .filter-bar input,
+    .filter-bar button {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .btn-filter {
+        width: 100% !important;
+        padding: 12px !important;
+    }
+}
+
+/* ===================================
+   CARDS - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .card {
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+        border-radius: 10px !important;
+    }
+    
+    .card-body {
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+    
+    .company-logo {
+        width: 45px !important;
+        height: 45px !important;
+        flex-shrink: 0;
+    }
+    
+    .company-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .company-info h3 {
+        font-size: 0.95rem !important;
+        word-break: break-word;
+    }
+    
+    .company-info p {
+        font-size: 0.8rem !important;
+    }
+    
+    .save-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+    
+    .card {
+        position: relative;
+    }
+    
+    .card-footer {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        padding-top: 8px !important;
+        margin-top: 8px !important;
+    }
+    
+    .tag {
+        font-size: 0.7rem !important;
+        padding: 4px 8px !important;
+    }
+    
+    .view-more {
+        font-size: 0.85rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .company-info h3 {
+        font-size: 0.9rem !important;
+    }
+    
+    .company-info p {
+        font-size: 0.75rem !important;
+    }
+}
+
+/* ===================================
+   TABLES - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -10px;
+        padding: 0 10px;
+    }
+    
+    table {
+        min-width: 600px;
+        font-size: 0.85rem;
+    }
+    
+    table th,
+    table td {
+        padding: 10px 8px !important;
+        white-space: nowrap;
+    }
+    
+    .action-buttons {
+        flex-direction: column !important;
+        gap: 4px !important;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        padding: 8px 10px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Alternative: Stack table on mobile */
+@media (max-width: 480px) {
+    .table-responsive-stack {
+        display: block;
+    }
+    
+    .table-responsive-stack table,
+    .table-responsive-stack thead,
+    .table-responsive-stack tbody,
+    .table-responsive-stack th,
+    .table-responsive-stack td,
+    .table-responsive-stack tr {
+        display: block;
+    }
+    
+    .table-responsive-stack thead {
+        display: none;
+    }
+    
+    .table-responsive-stack tr {
+        margin-bottom: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px;
+        background: white;
+    }
+    
+    .table-responsive-stack td {
+        padding: 8px 0 !important;
+        border: none !important;
+        text-align: left !important;
+    }
+    
+    .table-responsive-stack td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #666;
+        display: block;
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+    }
+}
+
+/* ===================================
+   BUTTONS - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .btn {
+        padding: 10px 14px !important;
+        font-size: 0.9rem !important;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+    
+    .btn-group .btn {
+        flex: 1 1 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn {
+        width: 100%;
+        padding: 12px !important;
+    }
+    
+    .btn-group {
+        flex-direction: column !important;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+    }
+}
+
+/* ===================================
+   FORMS - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .form-group {
+        margin-bottom: 14px !important;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem !important;
+        margin-bottom: 6px !important;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 12px !important;
+        font-size: 16px !important; /* Prevents iOS zoom */
+        border-radius: 8px !important;
+    }
+    
+    .form-group textarea {
+        min-height: 120px !important;
+    }
+}
+
+/* ===================================
+   MODALS - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95% !important;
+        max-width: none !important;
+        max-height: 90vh !important;
+        margin: 20px auto;
+        border-radius: 12px !important;
+    }
+    
+    .modal-header {
+        padding: 16px !important;
+    }
+    
+    .modal-title {
+        font-size: 1.1rem !important;
+    }
+    
+    .modal-body {
+        padding: 16px !important;
+    }
+    
+    .modal-footer {
+        padding: 16px !important;
+        flex-direction: column-reverse !important;
+        gap: 10px !important;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0 !important;
+    }
+}
+
+/* ===================================
+   BANNER / CAROUSEL - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .banner {
+        margin: 10px !important;
+        border-radius: 8px !important;
+    }
+    
+    .banner .slide {
+        padding-top: 45% !important;
+    }
+    
+    .banner .caption {
+        font-size: 0.9rem !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: 8px !important;
+    }
+    
+    .banner .banner-btn {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    .banner .banner-btn.prev {
+        left: 8px !important;
+    }
+    
+    .banner .banner-btn.next {
+        right: 8px !important;
+    }
+    
+    .banner .dots {
+        bottom: 6px !important;
+        gap: 6px !important;
+    }
+    
+    .banner .dot {
+        width: 8px !important;
+        height: 8px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .banner .slide {
+        padding-top: 56% !important;
+    }
+    
+    .banner .banner-btn.playpause {
+        display: none !important;
+    }
+}
+
+/* ===================================
+   PAGINATION - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .pagination {
+        gap: 6px !important;
+        padding: 10px 5px !important;
+    }
+    
+    .pagination .page-link {
+        padding: 8px 10px !important;
+        min-width: 38px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .page-summary {
+        font-size: 0.85rem !important;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination .page-link {
+        padding: 6px 8px !important;
+        min-width: 34px !important;
+        font-size: 0.8rem !important;
+    }
+    
+    /* Hide some page numbers on very small screens */
+    .pagination .page-item:not(:first-child):not(:last-child):not(.active) {
+        display: none;
+    }
+    
+    .pagination .page-item.active,
+    .pagination .page-item:first-child,
+    .pagination .page-item:last-child {
+        display: block;
+    }
+}
+
+/* ===================================
+   LOGIN PAGE - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .login-container {
+        max-width: 100% !important;
+        margin: 10px !important;
+        border-radius: 8px !important;
+    }
+    
+    .login-header {
+        padding: 25px 20px !important;
+        border-radius: 8px 8px 0 0 !important;
+    }
+    
+    .login-header h1 {
+        font-size: 1.4rem !important;
+    }
+    
+    .login-header p {
+        font-size: 0.9rem !important;
+    }
+    
+    .login-body {
+        padding: 25px 20px !important;
+    }
+    
+    .user-type-selector {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    .user-type-option label {
+        padding: 14px !important;
+    }
+    
+    .btn-login {
+        padding: 14px !important;
+        font-size: 1rem !important;
+    }
+}
+
+/* ===================================
+   PROFILE PAGE - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .profile-header {
+        height: 140px !important;
+        border-radius: 0 0 30px 30px !important;
+    }
+    
+    .profile-card {
+        margin-top: -80px !important;
+        border-radius: 15px !important;
+    }
+    
+    .profile-card .row.g-0 {
+        flex-direction: column !important;
+    }
+    
+    .profile-card .col-md-4,
+    .profile-card .col-md-8 {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .profile-card .col-md-8 {
+        border-bottom: none;
+    }
+    
+    .avatar-circle {
+        width: 100px !important;
+        height: 100px !important;
+        font-size: 2.5rem !important;
+    }
+    
+    .info-box {
+        padding: 15px !important;
+    }
+}
+
+/* ===================================
+   ADMIN DASHBOARD - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .cards {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .card h2 {
+        font-size: 1.3rem !important;
+    }
+    
+    .card i {
+        font-size: 24px !important;
+    }
+    
+    .actions {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+    
+    .action {
+        padding: 18px !important;
+    }
+    
+    .action h3 {
+        font-size: 1rem !important;
+    }
+    
+    .action p {
+        font-size: 0.85rem !important;
+    }
+    
+    .action a {
+        padding: 10px 14px !important;
+        font-size: 0.9rem !important;
+        display: block;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .cards {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ===================================
+   UTILITY CLASSES - Mobile
+   =================================== */
+
+.mobile-only {
+    display: none !important;
+}
+
+.desktop-only {
+    display: block !important;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .mobile-full-width {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .mobile-center {
+        text-align: center !important;
+    }
+    
+    .mobile-stack {
+        flex-direction: column !important;
+    }
+    
+    .mobile-hide {
+        display: none !important;
+    }
+    
+    .mobile-padding {
+        padding: 15px !important;
+    }
+    
+    .mobile-margin {
+        margin: 10px !important;
+    }
+}
+
+/* ===================================
+   ALERTS - Mobile
+   =================================== */
+
+@media (max-width: 768px) {
+    .alert {
+        padding: 12px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* ===================================
+   SCROLLBAR STYLING - Touch Devices
+   =================================== */
+
+@media (max-width: 768px) {
+    /* Hide scrollbar for cleaner look on mobile */
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+    }
+}
+
+/* ===================================
+   SAFE AREA SUPPORT (iPhone X+)
+   =================================== */
+
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+    }
+    
+    header {
+        padding-top: max(10px, env(safe-area-inset-top));
+    }
+}
+
+/* ===================================
+   LANDSCAPE MODE - Mobile
+   =================================== */
+
+@media (max-width: 900px) and (orientation: landscape) {
+    header {
+        height: 50px !important;
+    }
+    
+    .sidebar {
+        padding-top: 50px !important;
+    }
+    
+    .banner .slide {
+        padding-top: 35% !important;
+    }
+}
+
+/* ===================================
+   PRINT STYLES
+   =================================== */
+
+@media print {
+    .sidebar,
+    .overlay-side,
+    header,
+    .menu-icon,
+    .save-btn,
+    .btn-filter,
+    .pagination,
+    .logout-btn,
+    .modal {
+        display: none !important;
+    }
+    
+    main {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    
+    body {
+        background: white !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+    }
+}
