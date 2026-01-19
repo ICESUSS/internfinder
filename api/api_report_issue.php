@@ -14,7 +14,7 @@ $std_id = $_SESSION['user_id'];
 // ensure table exists
 $createSql = "CREATE TABLE IF NOT EXISTS tb_reports (
     report_id INT AUTO_INCREMENT PRIMARY KEY,
-    std_id INT NOT NULL,
+    std_id VARCHAR(11) NOT NULL,
     subject VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     status VARCHAR(32) NOT NULL DEFAULT 'open',
@@ -42,7 +42,7 @@ if ($method === 'POST') {
         echo json_encode(['success' => false, 'error' => 'db_prepare']);
         exit;
     }
-    $ins->bind_param('iss', $std_id, $subject, $message);
+    $ins->bind_param('sss', $std_id, $subject, $message);
     $ok = $ins->execute();
     if ($ok) {
         $reportId = $ins->insert_id;
@@ -72,7 +72,7 @@ if ($method === 'POST') {
         echo json_encode(['success' => false, 'error' => 'db_prepare']);
         exit;
     }
-    $stmt->bind_param('i', $std_id);
+    $stmt->bind_param('s', $std_id);
     $stmt->execute();
     $res = $stmt->get_result();
     $rows = [];

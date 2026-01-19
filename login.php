@@ -11,39 +11,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     if ($user_type == 'student') {
         // ตรวจสอบนักศึกษา
-        $sql = "SELECT * FROM tb_student WHERE std_id = ? AND std_password = ?";
+        $sql = "SELECT * FROM tb_student WHERE std_id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $username, $password);
+        $stmt->bind_param("s", $username);
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            $_SESSION['user_id'] = $row['std_id'];
-            $_SESSION['user_name'] = $row['std_name'];
-            $_SESSION['user_type'] = 'student';
-            header("Location: student/dashboard.php");
-            exit();
+            // รองรับทั้งแบบรหัสผ่านตรงๆ และแบบ Hashed
+            if ($password === $row['std_password'] || password_verify($password, $row['std_password'])) {
+                $_SESSION['user_id'] = $row['std_id'];
+                $_SESSION['user_name'] = $row['std_name'] . ' ' . $row['std_lastname'];
+                $_SESSION['user_type'] = 'student';
+                header("Location: student/index.php");
+                exit();
+            } else {
+                $error = "รหัสผ่านไม่ถูกต้อง";
+            }
         } else {
-            $error = "รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง";
+            $error = "ไม่พบรหัสนักศึกษานี้";
         }
     } else if ($user_type == 'admin') {
         // ตรวจสอบผู้ดูแลระบบ
-        $sql = "SELECT * FROM tb_admin WHERE ad_id = ? AND ad_password = ?";
+        $sql = "SELECT * FROM tb_admin WHERE ad_id = ?";
         $stmt = $conn->prepare($sql);
-        // หมายเหตุ: ถ้า ad_id ในฐานข้อมูลเป็น int ให้ใช้ "is" ถ้าเป็น string ให้ใช้ "ss"
-        $stmt->bind_param("is", $username, $password); 
+        $stmt->bind_param("s", $username); 
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            $_SESSION['user_id'] = $row['ad_id'];
-            $_SESSION['user_type'] = 'admin';
-            header("Location: admin/dashboard.php");
-            exit();
+            // รองรับทั้งแบบรหัสผ่านตรงๆ และแบบ Hashed
+            if ($password === $row['ad_password'] || password_verify($password, $row['ad_password'])) {
+                $_SESSION['user_id'] = $row['ad_id'];
+                $_SESSION['user_type'] = 'admin';
+                header("Location: admin/index.php");
+                exit();
+            } else {
+                $error = "รหัสผ่านไม่ถูกต้อง";
+            }
         } else {
-            $error = "รหัสผู้ดูแลระบบหรือรหัสผ่านไม่ถูกต้อง";
+            $error = "ไม่พบรหัสผู้ดูแลระบบนี้";
         }
     }
 }

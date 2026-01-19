@@ -81,7 +81,7 @@ if ($std_id) {
                 </a>
             <?php endif; ?>
 
-            <a href="dashboard.php" class="nav-item"><i class="fas fa-home"></i> หน้าแรก</a>
+            <a href="index.php" class="nav-item"><i class="fas fa-home"></i> หน้าแรก</a>
             <a href="saved.php" class="nav-item" style="background:#f3f8ff; color:#2196F3;"><i class="fas fa-bookmark"></i> ที่บันทึก</a>
             <a href="#" class="nav-item"><i class="fas fa-info-circle"></i> สถานะ</a>
             <a href="report.php" class="nav-item"><i class="fas fa-user"></i> รายงานปัญหา</a>
@@ -119,7 +119,7 @@ if ($std_id) {
                                 <p class="address"><?php echo htmlspecialchars(mb_strimwidth($row['com_address'], 0, 50, "..."), ENT_QUOTES, 'UTF-8'); ?></p>
                             </div>
                             <button class="save-btn" type="button" data-com-id="<?php echo (int)$row['com_id']; ?>" aria-label="บันทึกบริษัท">
-                                <i class="fas fa-heart"></i>
+                                <i class="fas fa-bookmark"></i>
                             </button>
                         </div>
                         <div class="card-footer">

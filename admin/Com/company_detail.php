@@ -53,23 +53,24 @@ if (isset($_POST['save_job'])) {
     $allowance = trim($_POST['allowance'] ?? '');
     $work_time = trim($_POST['work_time'] ?? '');
     $work_day = trim($_POST['work_day'] ?? '');
+    $job_capacity = isset($_POST['job_capacity']) ? (int)$_POST['job_capacity'] : 0;
 
     if ($com_id <= 0 || $job_title === '') {
         $msg = 'กรุณาเลือกบริษัทและกรอกชื่อตำแหน่ง';
     } else {
         if ($job_id > 0) {
-            $ustmt = $conn->prepare("UPDATE tb_company_detail SET job_title=?, job_type=?, job_description=?, job_qualification=?, job_welfare=?, allowance=?, work_time=?, work_day=? WHERE id=?");
+            $ustmt = $conn->prepare("UPDATE tb_company_detail SET job_title=?, job_type=?, job_description=?, job_qualification=?, job_welfare=?, allowance=?, work_time=?, work_day=?, job_capacity=? WHERE id=?");
             if ($ustmt) {
-                $ustmt->bind_param('ssssssssi', $job_title, $job_type, $job_description, $job_qualification, $job_welfare, $allowance, $work_time, $work_day, $job_id);
+                $ustmt->bind_param('ssssssssii', $job_title, $job_type, $job_description, $job_qualification, $job_welfare, $allowance, $work_time, $work_day, $job_capacity, $job_id);
                 $ustmt->execute();
                 $ustmt->close();
                 header('Location: company_detail.php?com=' . $com_id . '&msg=updated');
                 exit;
             }
         } else {
-            $istmt = $conn->prepare("INSERT INTO tb_company_detail (com_id, job_title, job_type, job_description, job_qualification, job_welfare, allowance, work_time, work_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $istmt = $conn->prepare("INSERT INTO tb_company_detail (com_id, job_title, job_type, job_description, job_qualification, job_welfare, allowance, work_time, work_day, job_capacity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             if ($istmt) {
-                $istmt->bind_param('issssssss', $com_id, $job_title, $job_type, $job_description, $job_qualification, $job_welfare, $allowance, $work_time, $work_day);
+                $istmt->bind_param('issssssssi', $com_id, $job_title, $job_type, $job_description, $job_qualification, $job_welfare, $allowance, $work_time, $work_day, $job_capacity);
                 $istmt->execute();
                 $istmt->close();
                 header('Location: company_detail.php?com=' . $com_id . '&msg=added');
@@ -150,167 +151,325 @@ if ($sel_com > 0) {
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<title>จัดการรายละเอียดตำแหน่ง - Admin</title>
-<style>
-body{font-family:sans-serif;background:#f4f6f9;margin:0;padding:20px}
-.container{max-width:900px;margin:auto}
-.card{background:#fff;padding:16px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.06);margin-bottom:16px}
-.row{display:flex;gap:12px;align-items:center}
-.select{padding:8px;border-radius:8px;border:1px solid #ddd}
-.btn{padding:8px 12px;border-radius:8px;background:#2196F3;color:#fff;text-decoration:none;border:0}
-.btn.red{background:#e53935}
-.tbl{width:100%;border-collapse:collapse}
-.tbl th,.tbl td{padding:8px;border-bottom:1px solid #eee;text-align:left}
-.form-group{margin-bottom:10px}
-input,textarea,select{width:100%;padding:8px;border-radius:6px;border:1px solid #ddd}
-.job-actions a{margin-right:6px}
-.msg{padding:8px;background:#e8f5e9;border-radius:6px;color:#2e7d32;margin-bottom:10px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการรายละเอียดตำแหน่ง | Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --bg-main: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --border: #E2E8F0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Sarabun', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* ===== Header ===== */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        header h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        .btn-back { background: #F1F5F9; color: var(--text-muted); }
+        .btn-back:hover { background: #E2E8F0; color: var(--text-main); }
+        
+        .btn-danger { background: #FEE2E2; color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+
+        .btn-sm { padding: 6px 12px; border-radius: 8px; font-size: 13px; }
+
+        /* ===== Card & Form ===== */
+        .content-card {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        .section-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group.full { grid-column: span 2; }
+
+        label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #F8FAFC;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* ===== Table ===== */
+        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #F8FAFC; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+
+        .alert-float {
+            background: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--success);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header { flex-direction: column; align-items: stretch; gap: 15px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: span 1; }
+            
+            table thead { display: none; }
+            table tr { display: block; padding: 15px; border-bottom: 8px solid var(--bg-main); }
+            table td { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f1f1; text-align: right; }
+            table td:before { content: attr(data-label); font-weight: 600; color: var(--text-muted); text-align: left; padding-right: 10px; }
+            table td:last-child { border-bottom: none; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h2>จัดการรายละเอียดตำแหน่ง (tb_company_detail)</h2>
 
+<div class="container">
     <?php if(isset($_GET['msg'])): ?>
-        <?php
-            $map = [
-                'deleted' => 'ลบรายการเรียบร้อยแล้ว',
-                'deleted_all' => 'ลบตำแหน่งทั้งหมดเรียบร้อยแล้ว',
-                'added' => 'เพิ่มรายการเรียบร้อยแล้ว',
-                'updated' => 'แก้ไขรายการเรียบร้อยแล้ว'
-            ];
-            $m = $_GET['msg'];
-            $displayMsg = isset($map[$m]) ? $map[$m] : htmlspecialchars($m, ENT_QUOTES, 'UTF-8');
-        ?>
-        <div class="msg"><?php echo $displayMsg; ?></div>
+        <div class="alert-float">
+            <i class="fas fa-check-circle"></i> 
+            <?php
+                $map = ['deleted'=>'ลบรายการเรียบร้อยแล้ว','deleted_all'=>'ลบตำแหน่งทั้งหมดเรียบร้อยแล้ว','added'=>'เพิ่มรายการเรียบร้อยแล้ว','updated'=>'แก้ไขรายการเรียบร้อยแล้ว'];
+                echo $map[$_GET['msg']] ?? htmlspecialchars($_GET['msg']);
+            ?>
+        </div>
     <?php endif; ?>
 
-    <div class="card">
-        <form method="get" action="company_detail.php" class="row">
-            <label for="com">บริษัท</label>
-            <select id="com" name="com" class="select">
+    <header>
+        <h1><i class="fas fa-briefcase text-primary"></i> จัดการรายละเอียดตำแหน่ง</h1>
+        <div style="display:flex; gap:10px;">
+            <a href="company_list.php" class="btn btn-back"><i class="fas fa-arrow-left"></i> กลับไปบริษัท</a>
+        </div>
+    </header>
+
+    <div class="content-card">
+        <div class="section-title"><i class="fas fa-filter"></i> เลือกสถานประกอบการ</div>
+        <form method="get" style="display:flex; gap:10px;">
+            <select name="com" style="flex:1;">
                 <?php foreach($companies as $c): ?>
-                    <option value="<?= $c['com_id'] ?>" <?= $c['com_id']==$sel_com? 'selected' : '' ?>><?= htmlspecialchars($c['com_name']) ?> <?= $c['details_count'] > 0 ? ' — มี '.$c['details_count'].' รายการ' : ' — ยังไม่มีข้อมูล' ?></option>
+                    <option value="<?= $c['com_id'] ?>" <?= $c['com_id']==$sel_com? 'selected' : '' ?>>
+                        <?= htmlspecialchars($c['com_name']) ?> (<?= $c['details_count'] ?> ตำแหน่ง)
+                    </option>
                 <?php endforeach; ?>
             </select>
-            <button class="btn" type="submit">เลือก</button>
-            <a class="btn" href="company_list.php" style="margin-left:auto;">กลับไปบริษัท</a>
+            <button class="btn btn-primary" type="submit">ดูข้อมูล</button>
         </form>
     </div>
 
-    <!-- Summary: which companies have details -->
-    <div style="margin-bottom:10px;color:#333">
-        มีรายละเอียดแล้ว: <strong><?= $companiesWithDetails ?></strong> / <?= $totalCompanies ?> บริษัท
-        &nbsp; &nbsp;|&nbsp; &nbsp;
-        <small style="color:#666">(ชื่อตัวเลือกจะแสดงจำนวนตำแหน่งที่บันทึกไว้)</small>
-    </div>
-
-    <div class="card">
-        <h3><?= $editing ? 'แก้ไขตำแหน่ง' : 'เพิ่มตำแหน่ง' ?></h3>
-        <?php if (!empty($msg)) echo '<div class="msg">'.htmlspecialchars($msg).'</div>'; ?>
+    <div class="content-card">
+        <div class="section-title">
+            <i class="fas <?= $editing ? 'fa-edit' : 'fa-plus-circle' ?> text-primary"></i> 
+            <?= $editing ? 'แก้ไขตำแหน่งงาน' : 'เพิ่มตำแหน่งงานใหม่' ?>
+        </div>
         <form method="post">
             <input type="hidden" name="job_id" value="<?= $editing ? (int)$editing['id'] : 0 ?>">
-            <div class="form-group">
-                <label>บริษัท</label>
-                <select name="com_id">
-                    <?php foreach($companies as $c): ?>
-                        <option value="<?= $c['com_id'] ?>" <?= $c['com_id']==($editing? (int)$editing['com_id'] : $sel_com) ? 'selected' : '' ?>><?= htmlspecialchars($c['com_name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
+            <input type="hidden" name="com_id" value="<?= $sel_com ?>">
+            
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>ชื่อตำแหน่งงาน</label>
+                    <input name="job_title" placeholder="เช่น โปรแกรมเมอร์, ช่างซ่อมบำรุง" value="<?= $editing ? htmlspecialchars($editing['job_title']) : '' ?>" required>
+                </div>
+                <div class="form-group">
+                    <label>ประเภทงาน</label>
+                    <input name="job_type" placeholder="เช่น Full-time, Internship" value="<?= $editing ? htmlspecialchars($editing['job_type']) : '' ?>">
+                </div>
+                <div class="form-group">
+                    <label>เบี้ยเลี้ยง / ค่าตอบแทน</label>
+                    <input name="allowance" placeholder="เช่น 300 บาท/วัน หรือ - " value="<?= $editing ? htmlspecialchars($editing['allowance']) : '' ?>">
+                </div>
+                <div class="form-group">
+                    <label>เวลาเข้างาน</label>
+                    <input name="work_time" placeholder="เช่น 08:30 - 17:30" value="<?= $editing ? htmlspecialchars($editing['work_time']) : '' ?>">
+                </div>
+                <div class="form-group">
+                    <label>วันทำงาน</label>
+                    <input name="work_day" placeholder="เช่น จันทร์ - ศุกร์" value="<?= $editing ? htmlspecialchars($editing['work_day']) : '' ?>">
+                </div>
+                <div class="form-group">
+                    <label>จำนวนที่รับ (คน)</label>
+                    <input type="number" name="job_capacity" min="0" placeholder="เช่น 5" value="<?= $editing ? (int)($editing['job_capacity'] ?? 0) : '' ?>">
+                </div>
+                <div class="form-group full">
+                    <label>รายละเอียดงาน</label>
+                    <textarea name="job_description" rows="3"><?= $editing ? htmlspecialchars($editing['job_description']) : '' ?></textarea>
+                </div>
+                <div class="form-group full">
+                    <label>คุณสมบัติผู้สมัคร</label>
+                    <textarea name="job_qualification" rows="2"><?= $editing ? htmlspecialchars($editing['job_qualification']) : '' ?></textarea>
+                </div>
+                <div class="form-group full">
+                    <label>สวัสดิการเพิ่มเติม</label>
+                    <input name="job_welfare" value="<?= $editing ? htmlspecialchars($editing['job_welfare']) : '' ?>">
+                </div>
             </div>
-            <div class="form-group">
-                <label>ชื่อตำแหน่ง</label>
-                <input name="job_title" value="<?= $editing ? htmlspecialchars($editing['job_title']) : '' ?>">
+            
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button class="btn btn-primary" type="submit" name="save_job">
+                    <i class="fas fa-save"></i> <?= $editing ? 'บันทึกการแก้ไข' : 'เพิ่มตำแหน่ง' ?>
+                </button>
+                <?php if ($editing): ?>
+                    <a class="btn btn-back" href="company_detail.php?com=<?= $sel_com ?>">ยกเลิก</a>
+                <?php endif; ?>
             </div>
-            <div class="form-group">
-                <label>ประเภทงาน</label>
-                <input name="job_type" value="<?= $editing ? htmlspecialchars($editing['job_type']) : '' ?>">
-            </div>
-            <div class="form-group">
-                <label>รายละเอียด</label>
-                <textarea name="job_description" rows="4"><?= $editing ? htmlspecialchars($editing['job_description']) : '' ?></textarea>
-            </div>
-            <div class="form-group">
-                <label>คุณสมบัติ</label>
-                <textarea name="job_qualification" rows="2"><?= $editing ? htmlspecialchars($editing['job_qualification']) : '' ?></textarea>
-            </div>
-            <div class="form-group">
-                <label>สวัสดิการ</label>
-                <input name="job_welfare" value="<?= $editing ? htmlspecialchars($editing['job_welfare']) : '' ?>">
-            </div>
-            <div class="form-group">
-                <label>เบี้ยเลี้ยง</label>
-                <input name="allowance" value="<?= $editing ? htmlspecialchars($editing['allowance']) : '' ?>">
-            </div>
-            <div class="form-group">
-                <label>เวลา</label>
-                <input name="work_time" value="<?= $editing ? htmlspecialchars($editing['work_time']) : '' ?>">
-            </div>
-            <div class="form-group">
-                <label>วันทำงาน</label>
-                <input name="work_day" value="<?= $editing ? htmlspecialchars($editing['work_day']) : '' ?>">
-            </div>
-            <button class="btn" type="submit" name="save_job"><?= $editing ? 'บันทึกการแก้ไข' : 'เพิ่มตำแหน่ง' ?></button>
-            <?php if ($editing): ?>
-                <a class="btn" href="company_detail.php?com=<?= $sel_com ?>" style="margin-left:8px;background:#607D8B">ยกเลิก</a>
-            <?php endif; ?>
         </form>
     </div>
 
-    <?php
-    // find selected company details
-    $sel_company = null;
-    foreach ($companies as $cc) { if ($cc['com_id'] == $sel_com) { $sel_company = $cc; break; } }
-    $sel_company_name = $sel_company ? $sel_company['com_name'] : '—';
-    $sel_company_count = $sel_company ? (int)$sel_company['details_count'] : 0;
-    ?>
-    <div class="card">
-        <h3 style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <span>รายการตำแหน่งสำหรับบริษัท: <?= htmlspecialchars($sel_company_name) ?> <?php if ($sel_company_count>0) echo '<span style="color:#2e7d32">('.$sel_company_count.' รายการ)</span>'; else echo '<span style="color:#999">(ยังไม่มีตำแหน่ง)</span>'; ?></span>
-            <?php if ($sel_company_count > 0): ?>
-                <a class="btn red" href="company_detail.php?com=<?= $sel_com ?>&delete_all=1" onclick="return confirm('คุณแน่ใจว่าต้องการลบตำแหน่งทั้งหมดของบริษัทนี้?')" style="margin-left:auto">ลบทั้งหมด</a>
+    <div class="content-card">
+        <?php
+        $sel_company = null;
+        foreach ($companies as $cc) { if ($cc['com_id'] == $sel_com) { $sel_company = $cc; break; } }
+        $sel_company_name = $sel_company ? $sel_company['com_name'] : '—';
+        ?>
+        <div class="section-title" style="justify-content:space-between;">
+            <span><i class="fas fa-list"></i> ตำแหน่งงานของ: <?= htmlspecialchars($sel_company_name) ?></span>
+            <?php if (!empty($jobs)): ?>
+                <a class="btn btn-sm btn-danger" href="company_detail.php?com=<?= $sel_com ?>&delete_all=1" onclick="return confirm('ลบตำแหน่งทั้งหมดของบริษัทนี้?')">ลบทิ้งทั้งหมด</a>
             <?php endif; ?>
-        </h3>
+        </div>
 
         <?php if (empty($jobs)): ?>
-            <div class="card">ไม่มีตำแหน่ง</div>
-        <?php else: ?>
-            <table class="tbl">
-                <thead>
-                    <tr><th>#</th><th>ชื่อตำแหน่ง</th><th>ประเภท</th><th>เบี้ยเลี้ยง</th><th>เวลา</th><th>จัดการ</th></tr>
-                </thead>
-                <tbody>
-                    <?php foreach($jobs as $j): ?>
-                        <tr>
-                            <td><?= (int)$j['id'] ?></td>
-                            <td><?= htmlspecialchars($j['job_title']) ?></td>
-                            <td><?= htmlspecialchars($j['job_type']) ?></td>
-                            <td><?= htmlspecialchars($j['allowance']) ?></td>
-                            <td><?= htmlspecialchars($j['work_time']) ?> (<?= htmlspecialchars($j['work_day']) ?>)</td>
-                            <td class="job-actions">
-                                <a class="btn" href="company_detail.php?com=<?= $sel_com ?>&edit=<?= (int)$j['id'] ?>">แก้ไข</a>
-                                <a class="btn red" href="company_detail.php?com=<?= $sel_com ?>&delete=<?= (int)$j['id'] ?>" onclick="return confirm('ลบตำแหน่งนี้?')">ลบ</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-
-            <!-- Bottom summary & actions -->
-            <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-                <div style="color:#333">รวมทั้งหมด <strong><?= $sel_company_count ?></strong> ตำแหน่ง</div>
-                <?php if ($sel_company_count > 0): ?>
-                    <div style="margin-left:auto">
-                        <a class="btn" href="company_detail.php?com=<?= $sel_com ?>" style="background:#607D8B;margin-right:8px">รีเฟรช</a>
-                        <a class="btn red" href="company_detail.php?com=<?= $sel_com ?>&delete_all=1" onclick="return confirm('คุณแน่ใจว่าต้องการลบตำแหน่งทั้งหมดของบริษัทนี้?')">ลบทั้งหมด</a>
-                    </div>
-                <?php endif; ?>
+            <div style="text-align:center; padding:40px; color:var(--text-muted);">
+                <i class="fas fa-folder-open" style="font-size:32px; margin-bottom:10px; opacity:0.3"></i><br>
+                ยังไม่มีข้อมูลตำแหน่งงานสำหรับบริษัทนี้
             </div>
-
+        <?php else: ?>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ชื่อตำแหน่ง</th>
+                            <th>ประเภท</th>
+                            <th>ค่าตอบแทน</th>
+                            <th>จำนวนรับ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($jobs as $j): 
+                            // Count approved applications for this position
+                            $detail_id = (int)$j['detail_id'] ?? (int)$j['id'];
+                            $applied_res = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM tb_internship WHERE detail_id = $detail_id AND status = 'approved'");
+                            $applied_count = mysqli_fetch_assoc($applied_res)['cnt'] ?? 0;
+                            $capacity = (int)($j['job_capacity'] ?? 0);
+                            $is_full = ($capacity > 0 && $applied_count >= $capacity);
+                        ?>
+                            <tr>
+                                <td data-label="ตำแหน่ง">
+                                    <div style="font-weight:600"><?= htmlspecialchars($j['job_title']) ?></div>
+                                    <div style="font-size:12px; color:var(--text-muted);"><?= htmlspecialchars($j['work_time']) ?></div>
+                                </td>
+                                <td data-label="ประเภท"><?= htmlspecialchars($j['job_type']) ?></td>
+                                <td data-label="เบี้ยเลี้ยง"><?= htmlspecialchars($j['allowance']) ?></td>
+                                <td data-label="จำนวนรับ">
+                                    <?php if ($capacity > 0): ?>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-weight: 600; color: <?= $is_full ? 'var(--danger)' : 'var(--success)' ?>">
+                                                <?= $applied_count ?>/<?= $capacity ?>
+                                            </span>
+                                            <?php if ($is_full): ?>
+                                                <span style="background: #FEE2E2; color: #991B1B; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">เต็ม</span>
+                                            <?php else: ?>
+                                                <span style="background: #DCFCE7; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">เปิดรับ</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span style="color: var(--text-muted);">ไม่จำกัด</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="จัดการ">
+                                    <div style="display:flex; gap:5px;">
+                                        <a class="btn btn-sm" style="background:#EEF2FF; color:var(--primary);" href="company_detail.php?com=<?= $sel_com ?>&edit=<?= (int)$j['id'] ?>"><i class="fas fa-edit"></i></a>
+                                        <a class="btn btn-sm btn-danger" href="company_detail.php?com=<?= $sel_com ?>&delete=<?= (int)$j['id'] ?>" onclick="return confirm('ลบตำแหน่งนี้?')"><i class="fas fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php endif; ?>
     </div>
-
 </div>
 </body>
 </html>

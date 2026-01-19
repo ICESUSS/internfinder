@@ -14,7 +14,7 @@ $student = null;
 if ($std_id) {
     $stmt = $conn->prepare("SELECT * FROM tb_student WHERE std_id = ? LIMIT 1");
     if ($stmt) {
-        $stmt->bind_param('i', $std_id);
+        $stmt->bind_param('s', $std_id);
         $stmt->execute();
         $res = $stmt->get_result();
         if ($res && $res->num_rows > 0) $student = $res->fetch_assoc();
@@ -27,7 +27,7 @@ $savedIds = [];
 if ($std_id) {
     $sStmt = $conn->prepare("SELECT com_id FROM tb_saved WHERE std_id = ?");
     if ($sStmt) {
-        $sStmt->bind_param('i', $std_id);
+        $sStmt->bind_param('s', $std_id);
         $sStmt->execute();
         $sRes = $sStmt->get_result();
         if ($sRes) {
@@ -45,7 +45,7 @@ if ($std_id) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Internfider - ระบบค้นหาที่ฝึกงาน</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
     <link rel="stylesheet" href="../assets/css/student-dashboard.css">
     <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
@@ -78,7 +78,7 @@ if ($std_id) {
                             ?>
                         </div>
                         <div style="font-size:0.95rem;">
-                            <div style="font-weight:600;color:#222"><?php echo htmlspecialchars($student['std_name'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div style="font-weight:600;color:#222"><?php echo htmlspecialchars(($student['std_name'] ?? '-') . ' ' . ($student['std_lastname'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
                             <div style="font-size:0.82rem;color:#666;margin-top:4px;">รหัส: <?php echo htmlspecialchars($student['std_id'] ?? $std_id, ENT_QUOTES, 'UTF-8'); ?></div>
                             <div style="font-size:0.82rem;color:#666;"><?php echo htmlspecialchars($student['std_gmail'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
                         </div>
@@ -87,10 +87,22 @@ if ($std_id) {
             </a>
         <?php endif; ?>
 
-        <a href="dashboard.php" class="nav-item"><i class="fas fa-home"></i> หน้าแรก</a>
+        <a href="index.php" class="nav-item"><i class="fas fa-home"></i> หน้าแรก</a>
+        <a href="javascript:void(0)" class="nav-item notif" onclick="toggleSidebarNotif()">
+            <i class="fas fa-bell"></i> การแจ้งเตือน
+            <span id="sidebar-notif-badge" style="background:red; color:white; font-size:0.7rem; padding:2px 6px; border-radius:10px; margin-left:auto; display:none;">0</span>
+        </a>
+        <div id="sidebar-notif-container" style="display:none; background:#f9f9f9; border-bottom:1px solid #ddd;">
+            <div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.8rem; font-weight:600;">ล่าสุด</span>
+                <button onclick="markAllRead()" style="border:none; background:none; color:#3498db; cursor:pointer; font-size:0.75rem;">อ่านทั้งหมด</button>
+            </div>
+            <div id="sidebar-notif-list" style="max-height:300px; overflow-y:auto;">
+                <!-- notifications load here -->
+            </div>
+        </div>
         <a href="saved.php" class="nav-item"><i class="fas fa-bookmark"></i> ที่บันทึก</a>
-        <a href="#" class="nav-item"><i class="fas fa-info-circle"></i> สถานะ</a>
-        <a href="report.php" class="nav-item"><i class="fas fa-user"></i> รายงานปัญหา</a>
+        <a href="report.php" class="nav-item"><i class="fas fa-user-shield"></i> รายงานปัญหา</a>
         <div class="logout-area">
             <a href="../logout.php?logout=true" class="logout-btn"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
         </div>
@@ -102,8 +114,104 @@ if ($std_id) {
     <!-- Topbar -->
     <i class="fas fa-bars menu-icon" onclick="toggleMenu()"></i>
     <div class="logo">Internfinder</div>
-   
 </header>
+
+
+<script>
+// Notification Logic
+const sidebarNotifBadge = document.getElementById('sidebar-notif-badge');
+const sidebarNotifContainer = document.getElementById('sidebar-notif-container');
+const sidebarNotifList = document.getElementById('sidebar-notif-list');
+let isNotifOpen = false;
+let currentNotifications = [];
+
+function toggleSidebarNotif() {
+    isNotifOpen = !isNotifOpen;
+    sidebarNotifContainer.style.display = isNotifOpen ? 'block' : 'none';
+    if (isNotifOpen) {
+        fetchNotifications();
+    }
+}
+
+function openNotifModal(id) {
+    window.location.href = 'notification_detail.php?id=' + id;
+}
+
+async function fetchNotifications() {
+    try {
+        const res = await fetch('../api/get_notifications.php');
+        const data = await res.json();
+        if (data.success) {
+            currentNotifications = data.notifications;
+            updateBadge(data.unread_count);
+            renderList(data.notifications);
+        }
+    } catch (err) {
+        console.error('Error fetching notifications:', err);
+    }
+}
+
+function updateBadge(count) {
+    if (count > 0) {
+        sidebarNotifBadge.innerText = count;
+        sidebarNotifBadge.style.display = 'inline-block';
+    } else {
+        sidebarNotifBadge.style.display = 'none';
+    }
+}
+
+function renderList(items) {
+    if (!items || items.length === 0) {
+        sidebarNotifList.innerHTML = '<div style="padding:15px; text-align:center; color:#888; font-size:0.85rem;">ไม่มีการแจ้งเตือน</div>';
+        return;
+    }
+    let html = '';
+    items.forEach(item => {
+        const bg = item.is_read == 0 ? '#eef2f7' : '#fff';
+        const date = new Date(item.created_at).toLocaleDateString('th-TH') + ' ' + new Date(item.created_at).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+        html += `
+            <div onclick="openNotifModal(${item.id})" style="padding:10px 15px; border-bottom:1px solid #eee; background:${bg}; cursor:pointer; transition:background 0.2s;">
+                <div style="font-weight:600; font-size:0.8rem; color:#333; margin-bottom:2px;">${escapeHtml(item.title)}</div>
+                <div style="font-size:0.75rem; color:#666; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(item.message)}</div>
+                <div style="font-size:0.65rem; color:#999; margin-top:4px; text-align:right;">${date}</div>
+            </div>
+        `;
+    });
+    sidebarNotifList.innerHTML = html;
+}
+
+async function markRead(id) {
+    try {
+        const form = new FormData();
+        form.append('notif_id', id);
+        await fetch('../api/read_notifications.php', { method: 'POST', body: form });
+        fetchNotifications(); // Reload to update UI
+    } catch (err) { console.error(err); }
+}
+
+async function markAllRead() {
+    try {
+        const form = new FormData();
+        form.append('read_all', 'true');
+        await fetch('../api/read_notifications.php', { method: 'POST', body: form });
+        fetchNotifications();
+    } catch (err) { console.error(err); }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Initial fetch and poll
+fetchNotifications();
+setInterval(fetchNotifications, 60000); // Poll every 60 seconds
+</script>
 
 
     <main>
@@ -125,7 +233,6 @@ if ($std_id) {
             <button class="banner-btn prev" aria-label="Previous slide">&#10094;</button>
             <button class="banner-btn next" aria-label="Next slide">&#10095;</button>
             <button class="banner-btn playpause" aria-label="Pause slideshow" data-playing="true">⏸</button>
-            <div class="dots" role="tablist" aria-label="Slide dots"></div>
         </div> 
 
         <?php
@@ -257,7 +364,7 @@ if ($std_id) {
                             <p class="address"><?php echo htmlspecialchars(mb_strimwidth($row['com_address'], 0, 50, "..."), ENT_QUOTES, 'UTF-8'); ?></p>
                         </div>
                         <button class="save-btn" type="button" data-com-id="<?php echo (int)$row['com_id']; ?>" aria-label="บันทึกบริษัท">
-                            <i class="<?php echo in_array((int)$row['com_id'], $savedIds) ? 'fas' : 'far'; ?> fa-heart"></i>
+                            <i class="<?php echo in_array((int)$row['com_id'], $savedIds) ? 'fas' : 'far'; ?> fa-bookmark"></i>
                         </button>
                     </div>
                     <div class="card-footer">
@@ -331,7 +438,6 @@ if ($std_id) {
   const prevBtn = banner.querySelector('.banner-btn.prev');
   const nextBtn = banner.querySelector('.banner-btn.next');
   const playBtn = banner.querySelector('.banner-btn.playpause');
-  const dotsContainer = banner.querySelector('.dots');
   if (!slides.length) return;
 
   let index = 0;
@@ -360,26 +466,10 @@ if ($std_id) {
 
     if (!withAnim) track.style.transition = 'none'; else track.style.transition = '';
     track.style.transform = `translateX(-${index * 100}%)`;
-    // update dots aria
-    Array.from(dotsContainer.children).forEach((d, idx)=> {
-      d.classList.toggle('active', idx===index);
-      d.setAttribute('aria-selected', idx===index ? 'true' : 'false');
-      d.setAttribute('tabindex', idx===index ? '0' : '-1');
-    });
 
     // update play/pause aria
     banner.setAttribute('data-current', index+1);
   }
-
-  // create dots
-  slides.forEach((_,i)=>{
-    const btn = document.createElement('button');
-    btn.className = 'dot';
-    btn.setAttribute('role','tab');
-    btn.setAttribute('aria-label', `Go to slide ${i+1}`);
-    btn.addEventListener('click', ()=> { goTo(i); restart(); });
-    dotsContainer.appendChild(btn);
-  });
 
   // controls
   nextBtn && nextBtn.addEventListener('click', ()=> { goTo(index+1); restart(); });

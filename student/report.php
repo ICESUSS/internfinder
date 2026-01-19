@@ -92,7 +92,7 @@ if ($std_id) {
             </a>
         <?php endif; ?>
 
-        <a href="dashboard.php" class="nav-item"><i class="fas fa-home"></i> หน้าแรก</a>
+        <a href="index.php" class="nav-item"><i class="fas fa-home"></i> หน้าแรก</a>
         <a href="saved.php" class="nav-item"><i class="fas fa-bookmark"></i> ที่บันทึก</a>
          <a href="#" class="nav-item"><i class="fas fa-info-circle"></i> สถานะ</a>
         <a href="report.php" class="nav-item" style="background:#f3f8ff; color:#2196F3;"><i class="fas fa-bug"></i> รายงานปัญหา</a>

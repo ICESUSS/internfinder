@@ -19,15 +19,15 @@ $actor_type = $_SESSION['user_type'];
 $actor_id = $_SESSION['user_id'];
 
 // Get target user id
-$std_id = isset($_POST['std_id']) ? (int)$_POST['std_id'] : 0;
+$std_id = isset($_POST['std_id']) ? $_POST['std_id'] : '';
 
 // If not admin, can only edit self
 if ($actor_type !== 'admin') {
-    $std_id = (int)$actor_id;
+    $std_id = $actor_id;
 }
 
-if ($std_id <= 0) {
-    header('Location: ../admin_dashboard.php?error=invalid_id');
+if (empty($std_id)) {
+    header('Location: ../admin/index.php?error=invalid_id');
     exit();
 }
 
@@ -42,10 +42,16 @@ if (isset($_POST['std_name']) && trim($_POST['std_name']) !== '') {
     $values[] = trim($_POST['std_name']);
 }
 
+if (isset($_POST['std_lastname']) && trim($_POST['std_lastname']) !== '') {
+    $fields[] = 'std_lastname = ?';
+    $types .= 's';
+    $values[] = trim($_POST['std_lastname']);
+}
+
 if (isset($_POST['std_password']) && trim($_POST['std_password']) !== '') {
     $fields[] = 'std_password = ?';
     $types .= 's';
-    $values[] = trim($_POST['std_password']);
+    $values[] = password_hash(trim($_POST['std_password']), PASSWORD_DEFAULT);
 }
 
 if (isset($_POST['std_gmail']) && trim($_POST['std_gmail']) !== '') {
@@ -55,18 +61,18 @@ if (isset($_POST['std_gmail']) && trim($_POST['std_gmail']) !== '') {
 }
 
 if (empty($fields)) {
-    header('Location: ../admin_dashboard.php?error=no_fields');
+    header('Location: ../admin/index.php?error=no_fields');
     exit();
 }
 
 // Build and execute prepared statement
 $sql = 'UPDATE tb_student SET ' . implode(', ', $fields) . ' WHERE std_id = ? LIMIT 1';
-$types .= 'i';
+$types .= 's';
 $values[] = $std_id;
 
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
-    header('Location: ../admin_dashboard.php?error=db_error');
+    header('Location: ../admin/index.php?error=db_error');
     exit();
 }
 
@@ -83,7 +89,7 @@ call_user_func_array([$stmt, 'bind_param'], $bind_names);
 
 if (!$stmt->execute()) {
     $stmt->close();
-    header('Location: ../admin_dashboard.php?error=execute_failed');
+    header('Location: ../admin/index.php?error=execute_failed');
     exit();
 }
 
@@ -92,9 +98,9 @@ $stmt->close();
 
 // Redirect back with success message
 if ($affected > 0) {
-    header('Location: ../admin_dashboard.php?msg=updated');
+    header('Location: ../admin/index.php?msg=updated');
 } else {
-    header('Location: ../admin_dashboard.php?msg=no_changes');
+    header('Location: ../admin/index.php?msg=no_changes');
 }
 exit();
 ?>

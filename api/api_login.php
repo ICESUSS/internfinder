@@ -26,7 +26,7 @@ if ($stmt) {
         $_SESSION['user_name'] = $row['std_name'];
         $_SESSION['user_type'] = 'student';
         $stmt->close();
-        header('Location: ../admin/dashboard.php');
+        header('Location: ../student/index.php');
         exit();
     }
     $stmt->close();

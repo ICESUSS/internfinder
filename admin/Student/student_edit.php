@@ -34,42 +34,37 @@ if (!$student) {
 $deps = mysqli_query($conn, "SELECT * FROM tb_department");
 
 /* ===============================
-   ดึงข้อมูลบริษัท
-================================ */
-$companies = mysqli_query($conn, "SELECT * FROM tb_company ORDER BY com_name");
-
-/* ===============================
    บันทึกข้อมูล
 ================================ */
-if (isset($_POST['save'])) {
+    if (isset($_POST['save'])) {
+    
+        $std_name  = $_POST['std_name'];
+        $std_level = $_POST['std_level'];
+        $std_room  = $_POST['std_room'];
+        $std_add   = $_POST['std_add'];
+        $std_tel   = $_POST['std_tel'];
+        $std_gmail = $_POST['std_gmail'];
+        $dep_id    = $_POST['dep_id'];
+    
+        $std_name  = $_POST['std_name'];
+        $std_lastname = $_POST['std_lastname'];
 
-    $std_name  = $_POST['std_name'];
-    $std_level = $_POST['std_level'];
-    $std_add   = $_POST['std_add'];
-    $std_tel   = $_POST['std_tel'];
-    $std_gmail = $_POST['std_gmail'];
-    $dep_id    = $_POST['dep_id'];
-    $com_id    = $_POST['com_id'];
-
-    if ($com_id == "") {
-        $com_id = NULL;
+        $sql = "UPDATE tb_student SET
+                    std_name='$std_name',
+                    std_lastname='$std_lastname',
+                    std_level='$std_level',
+                    std_room='$std_room',
+                    std_add='$std_add',
+                    std_tel='$std_tel',
+                    std_gmail='$std_gmail',
+                    dep_id='$dep_id'
+                WHERE std_id='$std_id'";
+    
+        if (mysqli_query($conn, $sql)) {
+            header("Location: student_list.php?update=success");
+            exit;
+        }
     }
-
-    $sql = "UPDATE tb_student SET
-                std_name='$std_name',
-                std_level='$std_level',
-                std_add='$std_add',
-                std_tel='$std_tel',
-                std_gmail='$std_gmail',
-                dep_id='$dep_id',
-                com_id=" . ($com_id === NULL ? "NULL" : "'$com_id'") . "
-            WHERE std_id='$std_id'";
-
-    if (mysqli_query($conn, $sql)) {
-        header("Location: student_list.php?update=success");
-        exit;
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -117,8 +112,11 @@ button {
 <label>รหัสนักศึกษา</label>
 <input value="<?= $student['std_id'] ?>" disabled>
 
-<label>ชื่อ-นามสกุล</label>
+<label>ชื่อ</label>
 <input name="std_name" value="<?= $student['std_name'] ?>" required>
+
+<label>นามสกุล</label>
+<input name="std_lastname" value="<?= $student['std_lastname'] ?>" required>
 
 <label>ระดับชั้น</label>
 <select name="std_level">
@@ -128,6 +126,9 @@ button {
     <option value="ปวส. 1" <?= $student['std_level']=='ปวส. 1'?'selected':'' ?>>ปวส. 1</option>
     <option value="ปวส. 2" <?= $student['std_level']=='ปวส. 2'?'selected':'' ?>>ปวส. 2</option>
 </select>
+
+<label>ห้อง</label>
+<input name="std_room" value="<?= $student['std_room'] ?>" placeholder="เช่น 1, 2, 3">
 
 <label>ที่อยู่</label>
 <input name="std_add" value="<?= $student['std_add'] ?>">
@@ -160,16 +161,7 @@ if ($current_group != "") echo "</optgroup>";
 ?>
 </select>
 
-<label>สถานประกอบการ</label>
-<select name="com_id">
-    <option value="">-- ยังไม่มีที่ฝึกงาน --</option>
-<?php while($c = mysqli_fetch_assoc($companies)) { ?>
-    <option value="<?= $c['com_id'] ?>"
-        <?= $student['com_id']==$c['com_id']?'selected':'' ?>>
-        <?= $c['com_name'] ?>
-    </option>
-<?php } ?>
-</select>
+
 
 <button type="submit" name="save">บันทึก</button>
 </form>

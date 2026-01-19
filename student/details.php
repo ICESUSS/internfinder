@@ -37,7 +37,7 @@ if ($id > 0) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>รายละเอียดสถานประกอบการ</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="../assets/css/details.css">
 <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
 </head>
@@ -45,7 +45,7 @@ if ($id > 0) {
 <body>
 
 <header>
-    <a href="dashboard.php" style="color:#fff;text-decoration:none;">← กลับ</a>
+    <a href="index.php" style="color:#fff;text-decoration:none;">← กลับ</a>
 </header>
 
 <div class="container">
@@ -75,15 +75,43 @@ if ($id > 0) {
 
         <h3>ตำแหน่งฝึกงาน</h3>
         <?php if (!empty($jobs)): ?>
-            <?php foreach ($jobs as $job): ?>
+            <?php foreach ($jobs as $job): 
+                // Calculate capacity status
+                $capacity = isset($job['job_capacity']) ? (int)$job['job_capacity'] : 0;
+                $applied_count = 0;
+                if ($capacity > 0) {
+                    $cap_res = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM tb_internship WHERE detail_id = " . (int)$job['detail_id'] . " AND status = 'approved'");
+                    $applied_count = mysqli_fetch_assoc($cap_res)['cnt'] ?? 0;
+                }
+                $is_full = ($capacity > 0 && $applied_count >= $capacity);
+            ?>
                 <div class="job-card">
                     <h4><?= htmlspecialchars($job['job_title']) ?> <span class="job-type"><?= htmlspecialchars($job['job_type']) ?></span></h4>
                     <p class="info"><strong>รายละเอียด:</strong> <?= nl2br(htmlspecialchars($job['job_description'])) ?></p>
                     <p class="info"><strong>คุณสมบัติ:</strong> <?= nl2br(htmlspecialchars($job['job_qualification'])) ?></p>
                     <p class="info"><strong>สวัสดิการ:</strong> <?= nl2br(htmlspecialchars($job['job_welfare'])) ?> — <strong>เบี้ยเลี้ยง:</strong> <?= htmlspecialchars($job['allowance']) ?></p>
                     <p class="info"><strong>เวลาทำงาน:</strong> <?= htmlspecialchars($job['work_time']) ?> (<?= htmlspecialchars($job['work_day']) ?>)</p>
+                    
+                    <?php if ($capacity > 0): ?>
+                    <p class="info" style="margin-top: 10px;">
+                        <strong>จำนวนรับ:</strong> 
+                        <span style="font-weight: 600; color: <?= $is_full ? '#e74c3c' : '#27ae60' ?>">
+                            <?= $applied_count ?>/<?= $capacity ?> คน
+                        </span>
+                        <?php if ($is_full): ?>
+                            <span style="background: #FEE2E2; color: #991B1B; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px;">เต็มแล้ว</span>
+                        <?php else: ?>
+                            <span style="background: #DCFCE7; color: #166534; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px;">เปิดรับ</span>
+                        <?php endif; ?>
+                    </p>
+                    <?php endif; ?>
+                    
                     <div style="margin-top: 15px;">
-                        <a href="apply_job.php?id=<?= $job['detail_id'] ?>" class="btn" style="background-color: #2ecc71; padding: 8px 20px; font-size: 14px;">สมัครงาน</a>
+                        <?php if ($is_full): ?>
+                            <span class="btn" style="background-color: #95a5a6; padding: 8px 20px; font-size: 14px; cursor: not-allowed;">ตำแหน่งเต็มแล้ว</span>
+                        <?php else: ?>
+                            <a href="apply_job.php?id=<?= $job['detail_id'] ?>" class="btn" style="background-color: #2ecc71; padding: 8px 20px; font-size: 14px;">สมัครงาน</a>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -95,21 +123,19 @@ if ($id > 0) {
     <!-- 🔹 ขวา : การ์ดบริษัท -->
     <div class="card" style="text-align:center">
         <?php
-            // Determine logo file path and use safe basename to prevent path traversal
-            $logo_path = '';
-            if (!empty($company['com_img'])) {
-                $candidate = 'uploads/companies/' . basename($company['com_img']);
-                if (file_exists($candidate)) $logo_path = $candidate;
-            }
+        // Define paths
+        $upload_dir = "../uploads/companies/";
+        $default_img = $upload_dir . "default.png";
+        $img_filename = !empty($company['com_img']) ? basename($company['com_img']) : '';
+        $img_path = !empty($img_filename) ? $upload_dir . $img_filename : $default_img;
+
+        // Check if file actually exists on disk
+        if (!file_exists($img_path) || empty($img_filename)) {
+            $img_path = $default_img;
+        }
         ?>
 
-        <?php
-        $img = !empty($company['com_img'])
-            ? "../uploads/companies/".basename($company['com_img'])
-            : "../uploads/companies/default.png";
-        ?>
-
-        <img src="<?= htmlspecialchars($img, ENT_QUOTES, 'UTF-8') ?>"
+        <img src="<?= htmlspecialchars($img_path, ENT_QUOTES, 'UTF-8') ?>"
              style="width:80px;height:80px;border-radius:12px;
                     object-fit:cover;border:1px solid #eee;">
 

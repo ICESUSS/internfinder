@@ -28,23 +28,112 @@ if (!$job) {
     exit();
 }
 
+// ตรวจสอบจำนวนที่รับ (Capacity)
+$capacity = isset($job['job_capacity']) ? (int)$job['job_capacity'] : 0;
+$applied_count = 0;
+
+if ($capacity > 0) {
+    $cap_sql = "SELECT COUNT(*) as cnt FROM tb_internship WHERE detail_id = ? AND status = 'approved'";
+    $cap_stmt = $conn->prepare($cap_sql);
+    $cap_stmt->bind_param("i", $detail_id);
+    $cap_stmt->execute();
+    $cap_res = $cap_stmt->get_result()->fetch_assoc();
+    $applied_count = (int)$cap_res['cnt'];
+}
+
+$is_full = ($capacity > 0 && $applied_count >= $capacity);
+
+// ตรวจสอบ Mode: Edit (แก้ไขใบสมัคร)
+$mode = isset($_GET['mode']) ? $_GET['mode'] : '';
+$existing_app = null;
+
+// ตรวจสอบว่ามีใบสมัครเดิมหรือไม่
+$check_sql = "SELECT * FROM tb_internship WHERE std_id = ? AND detail_id = ?";
+$check_stmt = $conn->prepare($check_sql);
+$check_stmt->bind_param("si", $std_id, $detail_id);
+$check_stmt->execute();
+$res_check = $check_stmt->get_result();
+
+if ($res_check->num_rows > 0) {
+    $existing_app = $res_check->fetch_assoc();
+    
+    // ถ้าสถานะไม่ใช่ pending ห้ามแก้ไข (Lock data)
+    if ($existing_app['status'] !== 'pending') {
+        if ($mode == 'edit') {
+            echo "<div style='padding:20px; text-align:center;'>";
+            echo "<h3>ไม่สามารถแก้ไขได้</h3>";
+            echo "<p>ใบสมัครนี้อยู่ในสถานะ <b>" . htmlspecialchars($existing_app['status']) . "</b></p>";
+            echo "<a href='index.php'>กลับหน้าหลัก</a>";
+            echo "</div>";
+            exit();
+        }
+        // ถ้าไม่ใช่โหมด edit แต่มีข้อมูลอยู่แล้ว ก็แสดง error (เหมือนเดิม)
+        $msg = "คุณได้สมัครตำแหน่งนี้ไปแล้ว (สถานะ: " . $existing_app['status'] . ")";
+        $msg_type = "error";
+    } elseif ($mode == 'edit') {
+        // อนุญาตให้แก้ไข (status = pending)
+        // $existing_app พร้อมใช้งานในฟอร์ม
+    } else {
+        // มีข้อมูลแต่ไม่ได้กด Edit (กดเข้ามาใหม่) -> แจ้งเตือนว่าสมัครแล้ว
+        $msg = "คุณได้สมัครตำแหน่งนี้แล้ว <a href='?id=$detail_id&mode=edit'>แก้ไขใบสมัคร</a>";
+        $msg_type = "warning";
+    }
+} else {
+    // ไม่มีใบสมัครเดิม - ตรวจสอบว่าตำแหน่งเต็มหรือไม่
+    if ($is_full) {
+        $msg = "ตำแหน่งนี้รับเต็มแล้ว ($applied_count/$capacity คน) ไม่สามารถสมัครได้";
+        $msg_type = "error";
+    }
+}
+
 // จัดการเมื่อกดปุ่มส่งใบสมัคร
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // ถ้าสถานะ approved/rejected ห้ามบันทึก (Double check)
+    if ($existing_app && $existing_app['status'] !== 'pending') {
+        die("ไม่อนุญาตให้แก้ไขข้อมูล");
+    }
+
     $note = $_POST['note'];
     $com_id = $job['com_id'];
-    
-    // ตรวจสอบว่าเคยสมัครงานนี้ไปหรือยัง (สถานะ pending หรือ approved)
-    $check_sql = "SELECT * FROM tb_internship WHERE std_id = ? AND detail_id = ? AND status IN ('pending', 'approved')";
-    $check_stmt = $conn->prepare($check_sql);
-    $check_stmt->bind_param("si", $std_id, $detail_id);
-    $check_stmt->execute();
-    
-    if ($check_stmt->get_result()->num_rows > 0) {
-        $msg = "คุณได้สมัครตำแหน่งนี้ไปแล้ว หรือกำลังรอการตรวจสอบ";
-        $msg_type = "error";
+    $upload_dir = "../uploads/";
+
+    // Logic สำหรับ UPDATE
+    if ($existing_app) {
+        $resume_name = $existing_app['resume_file'];
+        $transcript_name = $existing_app['transcript_file'];
+
+        // Check New Resume
+        if (!empty($_FILES['resume']['name'])) {
+            $resume_ext = pathinfo($_FILES['resume']['name'], PATHINFO_EXTENSION);
+            $resume_name = "resume_" . $std_id . "_" . time() . "." . $resume_ext;
+            move_uploaded_file($_FILES['resume']['tmp_name'], $upload_dir . $resume_name);
+        }
+
+        // Check New Transcript
+        if (!empty($_FILES['transcript']['name'])) {
+            $trans_ext = pathinfo($_FILES['transcript']['name'], PATHINFO_EXTENSION);
+            $transcript_name = "trans_" . $std_id . "_" . time() . "." . $trans_ext;
+            move_uploaded_file($_FILES['transcript']['tmp_name'], $upload_dir . $transcript_name);
+        }
+
+        $update_sql = "UPDATE tb_internship SET resume_file=?, transcript_file=?, note=?, status='pending' WHERE intern_id=?";
+        $stmt_up = $conn->prepare($update_sql);
+        $stmt_up->bind_param("sssi", $resume_name, $transcript_name, $note, $existing_app['intern_id']);
+        
+        if ($stmt_up->execute()) {
+            $msg = "บันทึกการแก้ไขเรียบร้อยแล้ว!";
+            $msg_type = "success";
+            // Refresh data
+            $existing_app['note'] = $note;
+            $existing_app['resume_file'] = $resume_name;
+            $existing_app['transcript_file'] = $transcript_name;
+        } else {
+            $msg = "เกิดข้อผิดพลาด: " . $conn->error;
+            $msg_type = "error";
+        }
+
     } else {
-        // จัดการอัปโหลดไฟล์
-        $upload_dir = "../uploads/"; // สร้างโฟลเดอร์นี้ด้วยนะครับ
+        // Logic สำหรับ INSERT (สมัครใหม่)
         
         // Resume
         $resume_name = "";
@@ -71,6 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($stmt_ins->execute()) {
             $msg = "ส่งใบสมัครเรียบร้อยแล้ว! กรุณารอแอดมินตรวจสอบ";
             $msg_type = "success";
+            // Set existing_app to prevent re-submit form showing empty
+            $existing_app = ['status' => 'pending']; 
         } else {
             $msg = "เกิดข้อผิดพลาด: " . $conn->error;
             $msg_type = "error";
@@ -120,13 +211,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <?php echo $msg; ?>
         </div>
         <?php if ($msg_type == 'success'): ?>
-            <p style="text-align: center;"><a href="dashboard.php">กลับหน้าหลัก</a></p>
+            <p style="text-align: center;"><a href="index.php">กลับหน้าหลัก</a></p>
         <?php endif; ?>
     <?php endif; ?>
 
-    <?php if ($msg_type != 'success'): ?>
+<?php if ($msg_type != 'success'): ?>
     <div class="job-header">
-        <img src="../uploads/company_img/<?php echo !empty($job['com_img']) ? $job['com_img'] : 'default.png'; ?>" alt="Logo">
+        <?php
+        $upload_dir = "../uploads/companies/";
+        $default_img = $upload_dir . "default.png";
+        $img_filename = !empty($job['com_img']) ? basename($job['com_img']) : '';
+        $img_path = (!empty($img_filename) && file_exists($upload_dir . $img_filename)) 
+                    ? $upload_dir . $img_filename 
+                    : $default_img;
+        ?>
+        <img src="<?php echo htmlspecialchars($img_path); ?>" alt="Logo">
         <div>
             <div class="job-title"><?php echo htmlspecialchars($job['job_title']); ?></div>
             <div class="company-name">🏢 <?php echo htmlspecialchars($job['com_name']); ?></div>
@@ -141,21 +240,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <div class="form-group">
             <label for="resume">📄 อัปโหลด Resume (PDF เท่านั้น)</label>
-            <input type="file" name="resume" id="resume" class="form-control" accept=".pdf" required>
-            <div class="file-hint">* จำเป็นต้องมี Resume เพื่อให้ผู้ประกอบการพิจารณา</div>
+            <?php if (!empty($existing_app['resume_file'])): ?>
+                <div style="margin-bottom:5px; font-size:14px;">
+                    ไฟล์ปัจจุบัน: <a href="../uploads/<?= $existing_app['resume_file'] ?>" target="_blank">ดูไฟล์เดิม</a>
+                </div>
+            <?php endif; ?>
+            <input type="file" name="resume" id="resume" class="form-control" accept=".pdf" <?php echo empty($existing_app['resume_file']) ? 'required' : ''; ?>>
+            <div class="file-hint">* จำเป็นต้องมี Resume เพื่อให้ผู้ประกอบการพิจารณา (อัปโหลดใหม่เพื่อเปลี่ยนไฟล์)</div>
         </div>
 
         <div class="form-group">
             <label for="transcript">📊 อัปโหลดผลการเรียน (Transcript)</label>
+            <?php if (!empty($existing_app['transcript_file'])): ?>
+                <div style="margin-bottom:5px; font-size:14px;">
+                    ไฟล์ปัจจุบัน: <a href="../uploads/<?= $existing_app['transcript_file'] ?>" target="_blank">ดูไฟล์เดิม</a>
+                </div>
+            <?php endif; ?>
             <input type="file" name="transcript" id="transcript" class="form-control" accept=".pdf, .jpg, .png">
+            <div class="file-hint">(อัปโหลดใหม่เพื่อเปลี่ยนไฟล์)</div>
         </div>
 
         <div class="form-group">
             <label for="note">📝 ข้อความเพิ่มเติม (ถ้ามี)</label>
-            <textarea name="note" id="note" class="form-control" placeholder="แนะนำตัวสั้นๆ หรือบอกเหตุผลที่อยากฝึกงานที่นี่..."></textarea>
+            <textarea name="note" id="note" class="form-control" placeholder="แนะนำตัวสั้นๆ หรือบอกเหตุผลที่อยากฝึกงานที่นี่..."><?php echo isset($existing_app['note']) ? htmlspecialchars($existing_app['note']) : ''; ?></textarea>
         </div>
 
-        <button type="submit" class="btn-submit">🚀 ส่งใบสมัคร</button>
+        <button type="submit" class="btn-submit">
+            <?php echo !empty($existing_app) ? '💾 บันทึกการแก้ไข' : '🚀 ส่งใบสมัคร'; ?>
+        </button>
     </form>
     <?php endif; ?>
 </div>
