@@ -14,7 +14,7 @@ $msg = '';
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     if ($id > 0) {
-        $dstmt = $conn->prepare("DELETE FROM tb_company_detail WHERE id = ?");
+        $dstmt = $conn->prepare("DELETE FROM tb_company_detail WHERE detail_id = ?");
         if ($dstmt) {
             $dstmt->bind_param('i', $id);
             $dstmt->execute();
@@ -59,7 +59,7 @@ if (isset($_POST['save_job'])) {
         $msg = 'กรุณาเลือกบริษัทและกรอกชื่อตำแหน่ง';
     } else {
         if ($job_id > 0) {
-            $ustmt = $conn->prepare("UPDATE tb_company_detail SET job_title=?, job_type=?, job_description=?, job_qualification=?, job_welfare=?, allowance=?, work_time=?, work_day=?, job_capacity=? WHERE id=?");
+            $ustmt = $conn->prepare("UPDATE tb_company_detail SET job_title=?, job_type=?, job_description=?, job_qualification=?, job_welfare=?, allowance=?, work_time=?, work_day=?, job_capacity=? WHERE detail_id=?");
             if ($ustmt) {
                 $ustmt->bind_param('ssssssssii', $job_title, $job_type, $job_description, $job_qualification, $job_welfare, $allowance, $work_time, $work_day, $job_capacity, $job_id);
                 $ustmt->execute();
@@ -84,7 +84,7 @@ if (isset($_POST['save_job'])) {
 $companies = [];
 $totalCompanies = 0;
 $companiesWithDetails = 0;
-$cres = mysqli_query($conn, "SELECT c.com_id, c.com_name, COUNT(d.id) AS details_count FROM tb_company c LEFT JOIN tb_company_detail d ON c.com_id = d.com_id GROUP BY c.com_id ORDER BY c.com_name ASC");
+$cres = mysqli_query($conn, "SELECT c.com_id, c.com_name, COUNT(d.detail_id) AS details_count FROM tb_company c LEFT JOIN tb_company_detail d ON c.com_id = d.com_id GROUP BY c.com_id ORDER BY c.com_name ASC");
 if ($cres !== false) {
     while ($crow = mysqli_fetch_assoc($cres)) {
         $crow['details_count'] = (int)($crow['details_count'] ?? 0);
@@ -123,7 +123,7 @@ $sel_com = isset($_GET['com']) ? (int)$_GET['com'] : (count($companies) ? (int)$
 $editing = null;
 if (isset($_GET['edit']) && (int)$_GET['edit'] > 0) {
     $eid = (int)$_GET['edit'];
-    $est = $conn->prepare("SELECT * FROM tb_company_detail WHERE id = ? LIMIT 1");
+    $est = $conn->prepare("SELECT * FROM tb_company_detail WHERE detail_id = ? LIMIT 1");
     if ($est) {
         $est->bind_param('i', $eid);
         $est->execute();
@@ -137,7 +137,7 @@ if (isset($_GET['edit']) && (int)$_GET['edit'] > 0) {
 // Load jobs for selected company
 $jobs = [];
 if ($sel_com > 0) {
-    $jstmt = $conn->prepare("SELECT * FROM tb_company_detail WHERE com_id = ? ORDER BY id DESC");
+    $jstmt = $conn->prepare("SELECT * FROM tb_company_detail WHERE com_id = ? ORDER BY detail_id DESC");
     if ($jstmt) {
         $jstmt->bind_param('i', $sel_com);
         $jstmt->execute();
@@ -157,7 +157,7 @@ if ($sel_com > 0) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <style>
         :root {
             --primary: #4F46E5;
@@ -342,7 +342,7 @@ if ($sel_com > 0) {
             <?= $editing ? 'แก้ไขตำแหน่งงาน' : 'เพิ่มตำแหน่งงานใหม่' ?>
         </div>
         <form method="post">
-            <input type="hidden" name="job_id" value="<?= $editing ? (int)$editing['id'] : 0 ?>">
+            <input type="hidden" name="job_id" value="<?= $editing ? (int)$editing['detail_id'] : 0 ?>">
             <input type="hidden" name="com_id" value="<?= $sel_com ?>">
             
             <div class="form-grid">
@@ -428,7 +428,7 @@ if ($sel_com > 0) {
                     <tbody>
                         <?php foreach($jobs as $j): 
                             // Count approved applications for this position
-                            $detail_id = (int)$j['detail_id'] ?? (int)$j['id'];
+                            $detail_id = (int)$j['detail_id'];
                             $applied_res = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM tb_internship WHERE detail_id = $detail_id AND status = 'approved'");
                             $applied_count = mysqli_fetch_assoc($applied_res)['cnt'] ?? 0;
                             $capacity = (int)($j['job_capacity'] ?? 0);
@@ -459,8 +459,8 @@ if ($sel_com > 0) {
                                 </td>
                                 <td data-label="จัดการ">
                                     <div style="display:flex; gap:5px;">
-                                        <a class="btn btn-sm" style="background:#EEF2FF; color:var(--primary);" href="company_detail.php?com=<?= $sel_com ?>&edit=<?= (int)$j['id'] ?>"><i class="fas fa-edit"></i></a>
-                                        <a class="btn btn-sm btn-danger" href="company_detail.php?com=<?= $sel_com ?>&delete=<?= (int)$j['id'] ?>" onclick="return confirm('ลบตำแหน่งนี้?')"><i class="fas fa-trash"></i></a>
+                                        <a class="btn btn-sm" style="background:#EEF2FF; color:var(--primary);" href="company_detail.php?com=<?= $sel_com ?>&edit=<?= (int)$j['detail_id'] ?>"><i class="fas fa-edit"></i></a>
+                                        <a class="btn btn-sm btn-danger" href="company_detail.php?com=<?= $sel_com ?>&delete=<?= (int)$j['detail_id'] ?>" onclick="return confirm('ลบตำแหน่งนี้?')"><i class="fas fa-trash"></i></a>
                                     </div>
                                 </td>
                             </tr>

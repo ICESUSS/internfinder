@@ -28,6 +28,8 @@ if (!$job) {
     exit();
 }
 
+// Student data fetching removed
+
 // ตรวจสอบจำนวนที่รับ (Capacity)
 $capacity = isset($job['job_capacity']) ? (int)$job['job_capacity'] : 0;
 $applied_count = 0;
@@ -60,22 +62,18 @@ if ($res_check->num_rows > 0) {
     // ถ้าสถานะไม่ใช่ pending ห้ามแก้ไข (Lock data)
     if ($existing_app['status'] !== 'pending') {
         if ($mode == 'edit') {
-            echo "<div style='padding:20px; text-align:center;'>";
-            echo "<h3>ไม่สามารถแก้ไขได้</h3>";
-            echo "<p>ใบสมัครนี้อยู่ในสถานะ <b>" . htmlspecialchars($existing_app['status']) . "</b></p>";
-            echo "<a href='index.php'>กลับหน้าหลัก</a>";
-            echo "</div>";
-            exit();
+            // Allow editing even if approved/rejected to correct document data
+            $msg = "หมายเหตุ: คุณกำลังแก้ไขข้อมูลในใบสมัครที่อยู่ในสถานะ <b>" . htmlspecialchars($existing_app['status']) . "</b>";
+            $msg_type = "warning";
+        } else {
+            // If not in edit mode but already applied
+            $msg = "คุณได้สมัครตำแหน่งนี้แล้ว (สถานะ: " . htmlspecialchars($existing_app['status']) . ") <a href='?id=$detail_id&mode=edit' class='w3-text-blue'>แก้ไขข้อมูลใบสมัคร/คำร้อง</a>";
+            $msg_type = "info";
         }
-        // ถ้าไม่ใช่โหมด edit แต่มีข้อมูลอยู่แล้ว ก็แสดง error (เหมือนเดิม)
-        $msg = "คุณได้สมัครตำแหน่งนี้ไปแล้ว (สถานะ: " . $existing_app['status'] . ")";
-        $msg_type = "error";
     } elseif ($mode == 'edit') {
-        // อนุญาตให้แก้ไข (status = pending)
-        // $existing_app พร้อมใช้งานในฟอร์ม
+        // Normal edit for pending
     } else {
-        // มีข้อมูลแต่ไม่ได้กด Edit (กดเข้ามาใหม่) -> แจ้งเตือนว่าสมัครแล้ว
-        $msg = "คุณได้สมัครตำแหน่งนี้แล้ว <a href='?id=$detail_id&mode=edit'>แก้ไขใบสมัคร</a>";
+        $msg = "คุณได้สมัครตำแหน่งนี้แล้ว <a href='?id=$detail_id&mode=edit' class='w3-text-blue'>แก้ไขใบสมัคร</a>";
         $msg_type = "warning";
     }
 } else {
@@ -88,12 +86,17 @@ if ($res_check->num_rows > 0) {
 
 // จัดการเมื่อกดปุ่มส่งใบสมัคร
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // ถ้าสถานะ approved/rejected ห้ามบันทึก (Double check)
-    if ($existing_app && $existing_app['status'] !== 'pending') {
-        die("ไม่อนุญาตให้แก้ไขข้อมูล");
-    }
+    // Removal of strict status check on POST to allow editing document data
 
     $note = $_POST['note'];
+    $parent_tel = $_POST['parent_tel'];
+    $gpax = $_POST['gpax'];
+    $request_type = $_POST['request_type'];
+    $contact_name = $_POST['contact_name'] ?? '';
+    $term = $_POST['term'];
+    $start_date = $_POST['start_date'];
+    $end_date = $_POST['end_date'];
+    
     $com_id = $job['com_id'];
     $upload_dir = "../uploads/";
 
@@ -104,32 +107,98 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Check New Resume
         if (!empty($_FILES['resume']['name'])) {
-            $resume_ext = pathinfo($_FILES['resume']['name'], PATHINFO_EXTENSION);
-            $resume_name = "resume_" . $std_id . "_" . time() . "." . $resume_ext;
-            move_uploaded_file($_FILES['resume']['tmp_name'], $upload_dir . $resume_name);
+            // Validate file upload
+            if ($_FILES['resume']['error'] !== UPLOAD_ERR_OK) {
+                $msg = "เกิดข้อผิดพลาดในการอัปโหลดไฟล์ Resume";
+                $msg_type = "error";
+            } else {
+                // Check file size (max 5MB)
+                if ($_FILES['resume']['size'] > 5 * 1024 * 1024) {
+                    $msg = "ไฟล์ Resume ใหญ่เกินไป (สูงสุด 5MB)";
+                    $msg_type = "error";
+                } else {
+                    // Check MIME type
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mime = finfo_file($finfo, $_FILES['resume']['tmp_name']);
+                    finfo_close($finfo);
+                    
+                    $allowed_mimes = ['application/pdf'];
+                    $resume_ext = strtolower(pathinfo($_FILES['resume']['name'], PATHINFO_EXTENSION));
+                    
+                    if (!in_array($mime, $allowed_mimes) || $resume_ext !== 'pdf') {
+                        $msg = "ไฟล์ Resume ต้องเป็น PDF เท่านั้น";
+                        $msg_type = "error";
+                    } else {
+                        $resume_name = "resume_" . $std_id . "_" . time() . "." . $resume_ext;
+                        if (!move_uploaded_file($_FILES['resume']['tmp_name'], $upload_dir . $resume_name)) {
+                            $msg = "ไม่สามารถบันทึกไฟล์ Resume ได้";
+                            $msg_type = "error";
+                        }
+                    }
+                }
+            }
         }
 
         // Check New Transcript
-        if (!empty($_FILES['transcript']['name'])) {
-            $trans_ext = pathinfo($_FILES['transcript']['name'], PATHINFO_EXTENSION);
-            $transcript_name = "trans_" . $std_id . "_" . time() . "." . $trans_ext;
-            move_uploaded_file($_FILES['transcript']['tmp_name'], $upload_dir . $transcript_name);
+        if (!empty($_FILES['transcript']['name']) && (!isset($msg) || $msg_type !== 'error')) {
+            // Validate file upload
+            if ($_FILES['transcript']['error'] !== UPLOAD_ERR_OK) {
+                $msg = "เกิดข้อผิดพลาดในการอัปโหลดไฟล์ Transcript";
+                $msg_type = "error";
+            } else {
+                // Check file size (max 5MB)
+                if ($_FILES['transcript']['size'] > 5 * 1024 * 1024) {
+                    $msg = "ไฟล์ Transcript ใหญ่เกินไป (สูงสุด 5MB)";
+                    $msg_type = "error";
+                } else {
+                    // Check MIME type
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mime = finfo_file($finfo, $_FILES['transcript']['tmp_name']);
+                    finfo_close($finfo);
+                    
+                    $allowed_mimes = ['application/pdf', 'image/jpeg', 'image/png'];
+                    $trans_ext = strtolower(pathinfo($_FILES['transcript']['name'], PATHINFO_EXTENSION));
+                    $allowed_exts = ['pdf', 'jpg', 'jpeg', 'png'];
+                    
+                    if (!in_array($mime, $allowed_mimes) || !in_array($trans_ext, $allowed_exts)) {
+                        $msg = "ไฟล์ Transcript ต้องเป็น PDF, JPG หรือ PNG เท่านั้น";
+                        $msg_type = "error";
+                    } else {
+                        $transcript_name = "trans_" . $std_id . "_" . time() . "." . $trans_ext;
+                        if (!move_uploaded_file($_FILES['transcript']['tmp_name'], $upload_dir . $transcript_name)) {
+                            $msg = "ไม่สามารถบันทึกไฟล์ Transcript ได้";
+                            $msg_type = "error";
+                        }
+                    }
+                }
+            }
         }
-
-        $update_sql = "UPDATE tb_internship SET resume_file=?, transcript_file=?, note=?, status='pending' WHERE intern_id=?";
-        $stmt_up = $conn->prepare($update_sql);
-        $stmt_up->bind_param("sssi", $resume_name, $transcript_name, $note, $existing_app['intern_id']);
         
-        if ($stmt_up->execute()) {
-            $msg = "บันทึกการแก้ไขเรียบร้อยแล้ว!";
-            $msg_type = "success";
-            // Refresh data
-            $existing_app['note'] = $note;
-            $existing_app['resume_file'] = $resume_name;
-            $existing_app['transcript_file'] = $transcript_name;
-        } else {
-            $msg = "เกิดข้อผิดพลาด: " . $conn->error;
-            $msg_type = "error";
+        // ถ้ามี error ในการอัปโหลด ให้หยุดการทำงาน
+        if (!isset($msg) || $msg_type !== 'error') {
+            $update_sql = "UPDATE tb_internship SET resume_file=?, transcript_file=?, note=?, parent_tel=?, gpax=?, request_type=?, contact_name=?, term=?, start_date=?, end_date=? WHERE intern_id=?";
+            $stmt_up = $conn->prepare($update_sql);
+            $stmt_up->bind_param("ssssssssssi", $resume_name, $transcript_name, $note, $parent_tel, $gpax, $request_type, $contact_name, $term, $start_date, $end_date, $existing_app['intern_id']);
+            
+            if ($stmt_up->execute()) {
+                $msg = "บันทึกการแก้ไขเรียบร้อยแล้ว!";
+                $msg_type = "success";
+                // Refresh data
+                $existing_app['note'] = $note;
+                $existing_app['resume_file'] = $resume_name;
+                $existing_app['transcript_file'] = $transcript_name;
+                $existing_app['parent_tel'] = $parent_tel;
+                $existing_app['gpax'] = $gpax;
+                $existing_app['request_type'] = $request_type;
+                $existing_app['contact_name'] = $contact_name;
+                $existing_app['term'] = $term;
+                $existing_app['start_date'] = $start_date;
+                $existing_app['end_date'] = $end_date;
+            } else {
+                $msg = "เกิดข้อผิดพลาด: " . $conn->error;
+                $msg_type = "error";
+            }
+            $stmt_up->close();
         }
 
     } else {
@@ -138,33 +207,93 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Resume
         $resume_name = "";
         if (!empty($_FILES['resume']['name'])) {
-            $resume_ext = pathinfo($_FILES['resume']['name'], PATHINFO_EXTENSION);
-            $resume_name = "resume_" . $std_id . "_" . time() . "." . $resume_ext;
-            move_uploaded_file($_FILES['resume']['tmp_name'], $upload_dir . $resume_name);
+            // Validate file upload
+            if ($_FILES['resume']['error'] !== UPLOAD_ERR_OK) {
+                $msg = "เกิดข้อผิดพลาดในการอัปโหลดไฟล์ Resume";
+                $msg_type = "error";
+            } else {
+                // Check file size (max 5MB)
+                if ($_FILES['resume']['size'] > 5 * 1024 * 1024) {
+                    $msg = "ไฟล์ Resume ใหญ่เกินไป (สูงสุด 5MB)";
+                    $msg_type = "error";
+                } else {
+                    // Check MIME type
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mime = finfo_file($finfo, $_FILES['resume']['tmp_name']);
+                    finfo_close($finfo);
+                    
+                    $allowed_mimes = ['application/pdf'];
+                    $resume_ext = strtolower(pathinfo($_FILES['resume']['name'], PATHINFO_EXTENSION));
+                    
+                    if (!in_array($mime, $allowed_mimes) || $resume_ext !== 'pdf') {
+                        $msg = "ไฟล์ Resume ต้องเป็น PDF เท่านั้น";
+                        $msg_type = "error";
+                    } else {
+                        $resume_name = "resume_" . $std_id . "_" . time() . "." . $resume_ext;
+                        if (!move_uploaded_file($_FILES['resume']['tmp_name'], $upload_dir . $resume_name)) {
+                            $msg = "ไม่สามารถบันทึกไฟล์ Resume ได้";
+                            $msg_type = "error";
+                        }
+                    }
+                }
+            }
         }
 
         // Transcript
         $transcript_name = "";
-        if (!empty($_FILES['transcript']['name'])) {
-            $trans_ext = pathinfo($_FILES['transcript']['name'], PATHINFO_EXTENSION);
-            $transcript_name = "trans_" . $std_id . "_" . time() . "." . $trans_ext;
-            move_uploaded_file($_FILES['transcript']['tmp_name'], $upload_dir . $transcript_name);
+        if (!empty($_FILES['transcript']['name']) && (!isset($msg) || $msg_type !== 'error')) {
+            // Validate file upload
+            if ($_FILES['transcript']['error'] !== UPLOAD_ERR_OK) {
+                $msg = "เกิดข้อผิดพลาดในการอัปโหลดไฟล์ Transcript";
+                $msg_type = "error";
+            } else {
+                // Check file size (max 5MB)
+                if ($_FILES['transcript']['size'] > 5 * 1024 * 1024) {
+                    $msg = "ไฟล์ Transcript ใหญ่เกินไป (สูงสุด 5MB)";
+                    $msg_type = "error";
+                } else {
+                    // Check MIME type
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mime = finfo_file($finfo, $_FILES['transcript']['tmp_name']);
+                    finfo_close($finfo);
+                    
+                    $allowed_mimes = ['application/pdf', 'image/jpeg', 'image/png'];
+                    $trans_ext = strtolower(pathinfo($_FILES['transcript']['name'], PATHINFO_EXTENSION));
+                    $allowed_exts = ['pdf', 'jpg', 'jpeg', 'png'];
+                    
+                    if (!in_array($mime, $allowed_mimes) || !in_array($trans_ext, $allowed_exts)) {
+                        $msg = "ไฟล์ Transcript ต้องเป็น PDF, JPG หรือ PNG เท่านั้น";
+                        $msg_type = "error";
+                    } else {
+                        $transcript_name = "trans_" . $std_id . "_" . time() . "." . $trans_ext;
+                        if (!move_uploaded_file($_FILES['transcript']['tmp_name'], $upload_dir . $transcript_name)) {
+                            $msg = "ไม่สามารถบันทึกไฟล์ Transcript ได้";
+                            $msg_type = "error";
+                        }
+                    }
+                }
+            }
         }
-
-        // บันทึกลงฐานข้อมูล tb_internship
-        $insert_sql = "INSERT INTO tb_internship (std_id, com_id, detail_id, resume_file, transcript_file, note, status) 
-                       VALUES (?, ?, ?, ?, ?, ?, 'pending')";
-        $stmt_ins = $conn->prepare($insert_sql);
-        $stmt_ins->bind_param("siisss", $std_id, $com_id, $detail_id, $resume_name, $transcript_name, $note);
         
-        if ($stmt_ins->execute()) {
-            $msg = "ส่งใบสมัครเรียบร้อยแล้ว! กรุณารอแอดมินตรวจสอบ";
-            $msg_type = "success";
-            // Set existing_app to prevent re-submit form showing empty
-            $existing_app = ['status' => 'pending']; 
+        // ถ้ามี error ในการอัปโหลด ให้หยุดการทำงาน
+        if (isset($msg) && $msg_type === 'error') {
+            // Skip insert
         } else {
-            $msg = "เกิดข้อผิดพลาด: " . $conn->error;
-            $msg_type = "error";
+            // บันทึกลงฐานข้อมูล tb_internship
+            $insert_sql = "INSERT INTO tb_internship (std_id, com_id, detail_id, resume_file, transcript_file, note, parent_tel, gpax, request_type, contact_name, term, start_date, end_date, status) 
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+            $stmt_ins = $conn->prepare($insert_sql);
+            $stmt_ins->bind_param("siissssssssss", $std_id, $com_id, $detail_id, $resume_name, $transcript_name, $note, $parent_tel, $gpax, $request_type, $contact_name, $term, $start_date, $end_date);
+            
+            if ($stmt_ins->execute()) {
+                $msg = "ส่งใบสมัครเรียบร้อยแล้ว! กรุณารอแอดมินตรวจสอบ";
+                $msg_type = "success";
+                // Set existing_app to prevent re-submit form showing empty
+                $existing_app = ['status' => 'pending']; 
+            } else {
+                $msg = "เกิดข้อผิดพลาด: " . $conn->error;
+                $msg_type = "error";
+            }
         }
     }
 }
@@ -176,10 +305,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ยื่นใบสมัครฝึกงาน</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+    <link rel="stylesheet" href="../assets/css/student-dashboard.css">
+    <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap');
         
-        body { font-family: 'Sarabun', sans-serif; background: #f5f7fa; padding: 20px; }
+        body { font-family: 'Sarabun', sans-serif; background: #f5f7fa; }
+        main { padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         
         .job-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
@@ -201,9 +335,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         .file-hint { font-size: 13px; color: #888; margin-top: 5px; }
     </style>
-    <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
 </head>
 <body>
+    <?php include 'includes/header.php'; ?>
+
+
+<main>
 
 <div class="container">
     <?php if ($msg): ?>
@@ -260,6 +397,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="file-hint">(อัปโหลดใหม่เพื่อเปลี่ยนไฟล์)</div>
         </div>
 
+        <div style="background: #E3F2FD; padding: 20px; border-radius: 10px; border: 1px solid #BBDEFB; margin-bottom: 25px;">
+            <h5 style="margin-top:0; color:#0D47A1; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #90CAF9; padding-bottom:8px;">
+                <i class="fas fa-file-invoice"></i> ข้อมูลสำหรับแบบคำร้องขอฝึกงาน
+            </h5>
+
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> เบอร์โทรผู้ปกครอง</label>
+                <input type="text" name="parent_tel" class="form-control" placeholder="เช่น 081-234-5678" value="<?= htmlspecialchars($existing_app['parent_tel'] ?? '') ?>" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-graduation-cap"></i> เกรดเฉลี่ยสะสม (GPAX)</label>
+                <input type="text" name="gpax" class="form-control" placeholder="เช่น 3.50" value="<?= htmlspecialchars($existing_app['gpax'] ?? '') ?>" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-calendar-check"></i> ภาคเรียนที่/ปีการศึกษา</label>
+                <input type="text" name="term" class="form-control" placeholder="เช่น 2/2566" value="<?= htmlspecialchars($existing_app['term'] ?? '') ?>" required>
+            </div>
+
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:1;">
+                    <label>วันที่เริ่มต้น</label>
+                    <input type="date" name="start_date" class="form-control" value="<?= htmlspecialchars($existing_app['start_date'] ?? '') ?>" required>
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>วันที่สิ้นสุด</label>
+                    <input type="date" name="end_date" class="form-control" value="<?= htmlspecialchars($existing_app['end_date'] ?? '') ?>" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>ความประสงค์</label>
+                <div style="display:flex; gap:20px; padding: 10px; background:white; border-radius:6px; border:1px solid #ddd;">
+                    <label style="font-weight:normal; cursor:pointer;">
+                        <input type="radio" name="request_type" value="1" <?= (isset($existing_app['request_type']) && $existing_app['request_type'] == '1') ? 'checked' : '' ?>> หาสถานที่เอง
+                    </label>
+                    <label style="font-weight:normal; cursor:pointer;">
+                        <input type="radio" name="request_type" value="2" <?= (!isset($existing_app['request_type']) || $existing_app['request_type'] == '2') ? 'checked' : '' ?>> วิทยาลัยหาให้
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group" id="contact_name_group" style="<?= (isset($existing_app['request_type']) && $existing_app['request_type'] == '1') ? '' : 'display:none;' ?>">
+                <label>ตำแหน่งผู้ที่ติดต่อ (ถ้ามี)</label>
+                <input type="text" name="contact_name" class="form-control" placeholder="เช่น ผู้จัดการฝ่ายบุคคล" value="<?= htmlspecialchars($existing_app['contact_name'] ?? '') ?>">
+            </div>
+        </div>
+
+        <script>
+            document.querySelectorAll('input[name="request_type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const contactGroup = document.getElementById('contact_name_group');
+                    contactGroup.style.display = this.value === '1' ? 'block' : 'none';
+                });
+            });
+        </script>
+
         <div class="form-group">
             <label for="note">📝 ข้อความเพิ่มเติม (ถ้ามี)</label>
             <textarea name="note" id="note" class="form-control" placeholder="แนะนำตัวสั้นๆ หรือบอกเหตุผลที่อยากฝึกงานที่นี่..."><?php echo isset($existing_app['note']) ? htmlspecialchars($existing_app['note']) : ''; ?></textarea>
@@ -271,6 +466,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </form>
     <?php endif; ?>
 </div>
+
+</main>
+
 
 </body>
 </html>

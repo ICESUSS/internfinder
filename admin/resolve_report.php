@@ -17,17 +17,31 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $report_id = intval($_GET['id']);
 
 // ตรวจสอบว่ารายงานนี้มีอยู่จริง
-$check = mysqli_query($conn, "SELECT * FROM tb_reports WHERE report_id = $report_id");
-if (mysqli_num_rows($check) == 0) {
-    header("Location: report.php?msg=notfound");
-    exit();
+$check_stmt = $conn->prepare("SELECT * FROM tb_reports WHERE report_id = ?");
+if ($check_stmt) {
+    $check_stmt->bind_param("i", $report_id);
+    $check_stmt->execute();
+    $check_res = $check_stmt->get_result();
+    if ($check_res->num_rows == 0) {
+        $check_stmt->close();
+        header("Location: report.php?msg=notfound");
+        exit();
+    }
+    $check_stmt->close();
 }
 
 // อัปเดตสถานะเป็น closed
-$sql = "UPDATE tb_reports SET status = 'closed' WHERE report_id = $report_id";
-
-if (mysqli_query($conn, $sql)) {
-    header("Location: report.php?msg=resolved");
+$status = 'closed';
+$update_stmt = $conn->prepare("UPDATE tb_reports SET status = ? WHERE report_id = ?");
+if ($update_stmt) {
+    $update_stmt->bind_param("si", $status, $report_id);
+    if ($update_stmt->execute()) {
+        $update_stmt->close();
+        header("Location: report.php?msg=resolved");
+    } else {
+        $update_stmt->close();
+        header("Location: report.php?msg=error");
+    }
 } else {
     header("Location: report.php?msg=error");
 }

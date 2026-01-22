@@ -51,8 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_id'])) {
             */
 
             // --- Notification Logic ---
-            $notif_title = "คำขอฝึกงานได้รับการอนุมัติ";
-            $notif_msg = "คำขอฝึกงานของคุณที่ " . $row['com_name'] . " สถานะ: อนุมัติแล้ว";
+            $notif_title = "อนุมัติฝึกงาน: " . $row['com_name'];
+            $notif_msg = "คำขอฝึกงานของคุณที่ " . $row['com_name'] . " ได้รับการอนุมัติโดยแอดมินแล้ว";
             $std_id_notif = $row['std_id'];
             
             $stmt_notif = $conn->prepare("INSERT INTO tb_notifications (std_id, title, message) VALUES (?, ?, ?)");
@@ -89,7 +89,7 @@ $result = $conn->query($sql);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <style>
         :root {
             --primary: #4F46E5;

@@ -47,7 +47,7 @@ $company_total = $conn->query("
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -339,7 +339,7 @@ $company_total = $conn->query("
     <header>
         <h1><i class="fas fa-chart-pie"></i> แผงควบคุมระบบ</h1>
         <div class="header-actions">
-            <a class="btn btn-logout" href="../logout.php?logout=1" onclick="return confirm('ออกจากระบบ?')">
+            <a class="btn btn-logout" href="../logout.php" onclick="return confirm('ออกจากระบบ?')">
                 <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
             </a>
         </div>

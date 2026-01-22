@@ -14,14 +14,21 @@ if (!isset($_GET['id'])) {
     exit;
 }
 
-$std_id = $_GET['id'];
+$std_id = trim($_GET['id']);
 
 /* ===============================
    ดึงข้อมูลนักศึกษา
 ================================ */
-$sql = "SELECT * FROM tb_student WHERE std_id='$std_id'";
-$res = mysqli_query($conn, $sql);
-$student = mysqli_fetch_assoc($res);
+$stmt = $conn->prepare("SELECT * FROM tb_student WHERE std_id = ?");
+if ($stmt) {
+    $stmt->bind_param("s", $std_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $student = $res->fetch_assoc();
+    $stmt->close();
+} else {
+    $student = null;
+}
 
 if (!$student) {
     header("Location: student_list.php");
@@ -31,38 +38,48 @@ if (!$student) {
 /* ===============================
    ดึงข้อมูลแผนก
 ================================ */
-$deps = mysqli_query($conn, "SELECT * FROM tb_department");
+$deps_stmt = $conn->prepare("SELECT * FROM tb_department ORDER BY dep_name");
+$deps = null;
+if ($deps_stmt) {
+    $deps_stmt->execute();
+    $deps = $deps_stmt->get_result();
+}
 
 /* ===============================
    บันทึกข้อมูล
 ================================ */
     if (isset($_POST['save'])) {
-    
-        $std_name  = $_POST['std_name'];
-        $std_level = $_POST['std_level'];
-        $std_room  = $_POST['std_room'];
-        $std_add   = $_POST['std_add'];
-        $std_tel   = $_POST['std_tel'];
-        $std_gmail = $_POST['std_gmail'];
-        $dep_id    = $_POST['dep_id'];
-    
-        $std_name  = $_POST['std_name'];
-        $std_lastname = $_POST['std_lastname'];
+        $std_name  = trim($_POST['std_name']);
+        $std_lastname = trim($_POST['std_lastname']);
+        $std_level = trim($_POST['std_level']);
+        $std_room  = trim($_POST['std_room'] ?? '');
+        $std_add   = trim($_POST['std_add'] ?? '');
+        $std_add_no = trim($_POST['std_add_no'] ?? '');
+        $std_road   = trim($_POST['std_road'] ?? '');
+        $std_subdistrict = trim($_POST['std_subdistrict'] ?? '');
+        $std_district    = trim($_POST['std_district'] ?? '');
+        $std_province    = trim($_POST['std_province'] ?? '');
+        $std_zipcode     = trim($_POST['std_zipcode'] ?? '');
+        $std_tel   = trim($_POST['std_tel'] ?? '');
+        $std_gmail = trim($_POST['std_gmail'] ?? '');
+        $dep_id    = intval($_POST['dep_id']);
 
-        $sql = "UPDATE tb_student SET
-                    std_name='$std_name',
-                    std_lastname='$std_lastname',
-                    std_level='$std_level',
-                    std_room='$std_room',
-                    std_add='$std_add',
-                    std_tel='$std_tel',
-                    std_gmail='$std_gmail',
-                    dep_id='$dep_id'
-                WHERE std_id='$std_id'";
-    
-        if (mysqli_query($conn, $sql)) {
-            header("Location: student_list.php?update=success");
-            exit;
+        $update_stmt = $conn->prepare("UPDATE tb_student SET
+                    std_name=?, std_lastname=?, std_level=?, std_room=?, std_add=?,
+                    std_add_no=?, std_road=?, std_subdistrict=?, std_district=?,
+                    std_province=?, std_zipcode=?, std_tel=?, std_gmail=?, dep_id=?
+                WHERE std_id=?");
+        if ($update_stmt) {
+            $update_stmt->bind_param("sssssssssssssis", 
+                $std_name, $std_lastname, $std_level, $std_room, $std_add,
+                $std_add_no, $std_road, $std_subdistrict, $std_district,
+                $std_province, $std_zipcode, $std_tel, $std_gmail, $dep_id, $std_id);
+            if ($update_stmt->execute()) {
+                $update_stmt->close();
+                header("Location: student_list.php?update=success");
+                exit;
+            }
+            $update_stmt->close();
         }
     }
 ?>
@@ -130,7 +147,17 @@ button {
 <label>ห้อง</label>
 <input name="std_room" value="<?= $student['std_room'] ?>" placeholder="เช่น 1, 2, 3">
 
-<label>ที่อยู่</label>
+<label>ที่อยู่ปัจจุบัน (แสดงในใบคำร้อง)</label>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+    <input name="std_add_no" value="<?= $student['std_add_no'] ?? '' ?>" placeholder="บ้านเลขที่">
+    <input name="std_road" value="<?= $student['std_road'] ?? '' ?>" placeholder="ถนน">
+    <input name="std_subdistrict" value="<?= $student['std_subdistrict'] ?? '' ?>" placeholder="ตำบล">
+    <input name="std_district" value="<?= $student['std_district'] ?? '' ?>" placeholder="อำเภอ">
+    <input name="std_province" value="<?= $student['std_province'] ?? '' ?>" placeholder="จังหวัด">
+    <input name="std_zipcode" value="<?= $student['std_zipcode'] ?? '' ?>" placeholder="รหัสไปรษณีย์">
+</div>
+
+<label>ที่อยู่แบบเต็ม</label>
 <input name="std_add" value="<?= $student['std_add'] ?>">
 
 <label>เบอร์โทร</label>
@@ -143,21 +170,27 @@ button {
 <select name="dep_id">
 <?php
 // Re-query departments to ensure proper ordering for grouping
-$deps = mysqli_query($conn, "SELECT * FROM tb_department ORDER BY dep_group, dep_name");
+$deps_group_stmt = $conn->prepare("SELECT * FROM tb_department ORDER BY dep_group, dep_name");
 $current_group = "";
-while($d = mysqli_fetch_assoc($deps)) {
-    if ($current_group != $d['dep_group']) {
-        if ($current_group != "") echo "</optgroup>";
-        $current_group = $d['dep_group'];
-        echo "<optgroup label='$current_group'>";
+if ($deps_group_stmt) {
+    $deps_group_stmt->execute();
+    $deps_res = $deps_group_stmt->get_result();
+    while($d = $deps_res->fetch_assoc()) {
+        if ($current_group != ($d['dep_group'] ?? '')) {
+            if ($current_group != "") echo "</optgroup>";
+            $current_group = $d['dep_group'] ?? '';
+            echo "<optgroup label='" . htmlspecialchars($current_group, ENT_QUOTES, 'UTF-8') . "'>";
+        }
+    ?>
+        <option value="<?= htmlspecialchars($d['dep_id'], ENT_QUOTES, 'UTF-8') ?>"
+            <?= $student['dep_id']==$d['dep_id']?'selected':'' ?>>
+            <?= htmlspecialchars($d['dep_name'], ENT_QUOTES, 'UTF-8') ?>
+        </option>
+    <?php 
     }
-?>
-    <option value="<?= $d['dep_id'] ?>"
-        <?= $student['dep_id']==$d['dep_id']?'selected':'' ?>>
-        <?= $d['dep_name'] ?>
-    </option>
-<?php } 
-if ($current_group != "") echo "</optgroup>";
+    if ($current_group != "") echo "</optgroup>";
+    $deps_group_stmt->close();
+}
 ?>
 </select>
 

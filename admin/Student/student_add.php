@@ -42,10 +42,17 @@ if (isset($_POST['import_csv'])) {
             }
 
             // เช็คว่ารหัสนักศึกษาซ้ำหรือไม่
-            $check = mysqli_query($conn, "SELECT std_id FROM tb_student WHERE std_id='$std_id'");
-            if (mysqli_num_rows($check) > 0) {
-                $fail++; 
-                continue; // ข้ามคนนี้ไป
+            $check_stmt = $conn->prepare("SELECT std_id FROM tb_student WHERE std_id = ?");
+            if ($check_stmt) {
+                $check_stmt->bind_param("s", $std_id);
+                $check_stmt->execute();
+                $check_res = $check_stmt->get_result();
+                if ($check_res && $check_res->num_rows > 0) {
+                    $check_stmt->close();
+                    $fail++; 
+                    continue; // ข้ามคนนี้ไป
+                }
+                $check_stmt->close();
             }
 
             // Split Name for CSV
@@ -53,16 +60,30 @@ if (isset($_POST['import_csv'])) {
             $fname = $parts[0];
             $lname = isset($parts[1]) ? $parts[1] : '';
 
-            // SQL INSERT (ใช้ std_address)
-            $sql = "INSERT INTO tb_student 
-                    (std_id, std_password, std_name, std_lastname, std_add, std_tel, std_gmail, dep_id, std_level, std_room)
-                    VALUES 
-                    ('$std_id','$std_password','$fname','$lname','$std_add','$std_tel','$std_gmail','$dep_id', '$std_level', '$std_room')";
+            $std_add_no   = isset($row[9]) ? trim($row[9]) : '';
+            $std_road     = isset($row[10]) ? trim($row[10]) : '';
+            $std_subdistrict = isset($row[11]) ? trim($row[11]) : '';
+            $std_district    = isset($row[12]) ? trim($row[12]) : '';
+            $std_province    = isset($row[13]) ? trim($row[13]) : '';
+            $std_zipcode     = isset($row[14]) ? trim($row[14]) : '';
 
-            if (mysqli_query($conn, $sql)) {
-                $success++;
+            // SQL INSERT using prepared statement
+            $insert_stmt = $conn->prepare("INSERT INTO tb_student 
+                    (std_id, std_password, std_name, std_lastname, std_add, std_add_no, std_road, std_subdistrict, std_district, std_province, std_zipcode, std_tel, std_gmail, dep_id, std_level, std_room)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($insert_stmt) {
+                $insert_stmt->bind_param("sssssssssssssiss", 
+                    $std_id, $std_password, $fname, $lname, $std_add, $std_add_no, $std_road, 
+                    $std_subdistrict, $std_district, $std_province, $std_zipcode, $std_tel, 
+                    $std_gmail, $dep_id, $std_level, $std_room);
+                if ($insert_stmt->execute()) {
+                    $success++;
+                } else {
+                    $fail++; // อาจจะ fail ถ้า dep_id ไม่ตรงกับตาราง tb_department
+                }
+                $insert_stmt->close();
             } else {
-                $fail++; // อาจจะ fail ถ้า dep_id ไม่ตรงกับตาราง tb_department
+                $fail++;
             }
         }
         fclose($file);
@@ -75,34 +96,56 @@ if (isset($_POST['import_csv'])) {
    ➕ ADD SINGLE STUDENT
 ================================ */
 if (isset($_POST['add_student'])) {
-    // รับค่าและป้องกัน SQL Injection
-    $std_id       = mysqli_real_escape_string($conn, $_POST['std_id']);
-    $std_password = password_hash($_POST['std_password'], PASSWORD_DEFAULT);
-    $std_name     = mysqli_real_escape_string($conn, $_POST['std_name']);
-    $std_add     = mysqli_real_escape_string($conn, $_POST['std_add']); // รับค่า address
-    $std_tel      = mysqli_real_escape_string($conn, $_POST['std_tel']);
-    $std_gmail    = mysqli_real_escape_string($conn, $_POST['std_gmail']);
-    $std_level    = mysqli_real_escape_string($conn, $_POST['std_level']);
-    $std_room     = mysqli_real_escape_string($conn, $_POST['std_room']);
+    // รับค่าและ sanitize
+    $std_id       = trim($_POST['std_id']);
+    $std_password = !empty($_POST['std_password']) ? password_hash($_POST['std_password'], PASSWORD_DEFAULT) : password_hash('1234', PASSWORD_DEFAULT);
+    $std_name     = trim($_POST['std_name']);
+    $std_add      = trim($_POST['std_add'] ?? '');
+    $std_tel      = trim($_POST['std_tel'] ?? '');
+    $std_gmail    = trim($_POST['std_gmail'] ?? '');
+    $std_level    = trim($_POST['std_level'] ?? '');
+    $std_room     = trim($_POST['std_room'] ?? '');
     $dep_id       = intval($_POST['dep_id']);
 
     // เช็คซ้ำก่อนบันทึก
-    $check_dup = mysqli_query($conn, "SELECT std_id FROM tb_student WHERE std_id = '$std_id'");
-    if(mysqli_num_rows($check_dup) > 0){
-        $message = "❌ รหัสนักศึกษานี้มีอยู่แล้ว";
-    } else {
-                 $std_lastname = mysqli_real_escape_string($conn, $_POST['std_lastname']);
-
-        $sql = "INSERT INTO tb_student 
-                (std_id, std_password, std_name, std_lastname, std_level, std_room, std_add, std_tel, std_gmail, dep_id)
-                VALUES 
-                ('$std_id','$std_password','$std_name','$std_lastname','$std_level','$std_room','$std_add','$std_tel','$std_gmail','$dep_id')";
-
-        if (mysqli_query($conn, $sql)) {
-            $message = "✅ เพิ่มนักศึกษาเรียบร้อยแล้ว";
+    $check_dup = $conn->prepare("SELECT std_id FROM tb_student WHERE std_id = ?");
+    if ($check_dup) {
+        $check_dup->bind_param("s", $std_id);
+        $check_dup->execute();
+        $check_res = $check_dup->get_result();
+        if ($check_res && $check_res->num_rows > 0) {
+            $message = "❌ รหัสนักศึกษานี้มีอยู่แล้ว";
+            $check_dup->close();
         } else {
-            $message = "❌ เกิดข้อผิดพลาด: " . mysqli_error($conn);
+            $check_dup->close();
+            $std_lastname = trim($_POST['std_lastname'] ?? '');
+            $std_add_no   = trim($_POST['std_add_no'] ?? '');
+            $std_road     = trim($_POST['std_road'] ?? '');
+            $std_subdistrict = trim($_POST['std_subdistrict'] ?? '');
+            $std_district    = trim($_POST['std_district'] ?? '');
+            $std_province    = trim($_POST['std_province'] ?? '');
+            $std_zipcode     = trim($_POST['std_zipcode'] ?? '');
+
+            $insert_stmt = $conn->prepare("INSERT INTO tb_student 
+                    (std_id, std_password, std_name, std_lastname, std_level, std_room, std_add, std_add_no, std_road, std_subdistrict, std_district, std_province, std_zipcode, std_tel, std_gmail, dep_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            if ($insert_stmt) {
+                $insert_stmt->bind_param("sssssssssssssssi", 
+                    $std_id, $std_password, $std_name, $std_lastname, $std_level, $std_room, 
+                    $std_add, $std_add_no, $std_road, $std_subdistrict, $std_district, 
+                    $std_province, $std_zipcode, $std_tel, $std_gmail, $dep_id);
+                if ($insert_stmt->execute()) {
+                    $message = "✅ เพิ่มนักศึกษาเรียบร้อยแล้ว";
+                } else {
+                    $message = "❌ เกิดข้อผิดพลาด: " . $conn->error;
+                }
+                $insert_stmt->close();
+            } else {
+                $message = "❌ เกิดข้อผิดพลาดในการเตรียมคำสั่ง SQL";
+            }
         }
+    } else {
+        $message = "❌ เกิดข้อผิดพลาดในการตรวจสอบข้อมูล";
     }
 }
 ?>
@@ -211,7 +254,17 @@ if (isset($_POST['add_student'])) {
                 </div>
             </div>
             
-            <label>ที่อยู่</label>
+            <label>ที่อยู่ (สำหรับแสดงในใบคำร้อง)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <input name="std_add_no" placeholder="บ้านเลขที่">
+                <input name="std_road" placeholder="ถนน">
+                <input name="std_subdistrict" placeholder="ตำบล">
+                <input name="std_district" placeholder="อำเภอ">
+                <input name="std_province" placeholder="จังหวัด">
+                <input name="std_zipcode" placeholder="รหัสไปรษณีย์">
+            </div>
+
+            <label>ที่อยู่แบบเต็ม</label>
             <input name="std_add" placeholder="บ้านเลขที่ ตำบล อำเภอ จังหวัด"> <button type="submit" name="add_student" style="width: 100%; margin-top: 10px;">บันทึกข้อมูล</button>
         </form>
     </div>

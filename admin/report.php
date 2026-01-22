@@ -11,26 +11,50 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
 /* ===== ดึงข้อมูลสถิติ ===== */
 
 // นักศึกษา
-$count_students = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM tb_student"))['total'];
-$students_with_internship = mysqli_fetch_assoc(mysqli_query($conn, "
-    SELECT COUNT(DISTINCT std_id) as total FROM tb_internship WHERE status = 'approved'
-"))['total'];
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM tb_student");
+$stmt->execute();
+$count_students = $stmt->get_result()->fetch_assoc()['total'];
+$stmt->close();
+
+$stmt = $conn->prepare("SELECT COUNT(DISTINCT std_id) as total FROM tb_internship WHERE status = 'approved'");
+$stmt->execute();
+$students_with_internship = $stmt->get_result()->fetch_assoc()['total'];
+$stmt->close();
 $students_without_internship = $count_students - $students_with_internship;
 
 // บริษัท
-$count_companies = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM tb_company"))['total'];
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM tb_company");
+$stmt->execute();
+$count_companies = $stmt->get_result()->fetch_assoc()['total'];
+$stmt->close();
 
 // คำขอฝึกงาน
-$total_requests = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM tb_internship"))['total'];
-$pending_requests = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM tb_internship WHERE status = 'pending'"))['total'];
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM tb_internship");
+$stmt->execute();
+$total_requests = $stmt->get_result()->fetch_assoc()['total'];
+$stmt->close();
+
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM tb_internship WHERE status = 'pending'");
+$stmt->execute();
+$pending_requests = $stmt->get_result()->fetch_assoc()['total'];
+$stmt->close();
 
 // รายงานปัญหา
-$count_reports = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM tb_reports"))['total'];
-$pending_reports = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM tb_reports WHERE status='open'"))['total'];
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM tb_reports");
+$stmt->execute();
+$count_reports = $stmt->get_result()->fetch_assoc()['total'];
+$stmt->close();
+
+$status_open = 'open';
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM tb_reports WHERE status = ?");
+$stmt->bind_param("s", $status_open);
+$stmt->execute();
+$pending_reports = $stmt->get_result()->fetch_assoc()['total'];
+$stmt->close();
 $resolved_reports = $count_reports - $pending_reports;
 
 // สถิติตามแผนก
-$stats_by_dept = mysqli_query($conn, "
+$stats_by_dept_stmt = $conn->prepare("
     SELECT d.dep_name, 
            COUNT(s.std_id) as total_students,
            COUNT(DISTINCT i.std_id) as students_with_internship
@@ -40,9 +64,11 @@ $stats_by_dept = mysqli_query($conn, "
     GROUP BY d.dep_id, d.dep_name
     ORDER BY total_students DESC
 ");
+$stats_by_dept_stmt->execute();
+$stats_by_dept = $stats_by_dept_stmt->get_result();
 
 // สถิติตามระดับชั้น
-$stats_by_level = mysqli_query($conn, "
+$stats_by_level_stmt = $conn->prepare("
     SELECT std_level, 
            COUNT(*) as total,
            (SELECT COUNT(DISTINCT i.std_id) FROM tb_internship i 
@@ -53,17 +79,21 @@ $stats_by_level = mysqli_query($conn, "
     GROUP BY std_level
     ORDER BY std_level
 ");
+$stats_by_level_stmt->execute();
+$stats_by_level = $stats_by_level_stmt->get_result();
 
 // รายงานปัญหาทั้งหมด
-$all_reports = mysqli_query($conn, "
+$all_reports_stmt = $conn->prepare("
     SELECT r.*, s.std_name, s.std_lastname 
     FROM tb_reports r 
     LEFT JOIN tb_student s ON r.std_id = s.std_id 
     ORDER BY r.status ASC, r.created_at DESC
 ");
+$all_reports_stmt->execute();
+$all_reports = $all_reports_stmt->get_result();
 
 // คำขอล่าสุด
-$recent_requests = mysqli_query($conn, "
+$recent_requests_stmt = $conn->prepare("
     SELECT i.*, s.std_name, s.std_lastname, c.com_name
     FROM tb_internship i
     JOIN tb_student s ON i.std_id = s.std_id
@@ -71,6 +101,8 @@ $recent_requests = mysqli_query($conn, "
     ORDER BY i.intern_id DESC
     LIMIT 5
 ");
+$recent_requests_stmt->execute();
+$recent_requests = $recent_requests_stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -82,7 +114,7 @@ $recent_requests = mysqli_query($conn, "
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <style>
         :root {
             --primary: #4F46E5;
@@ -149,6 +181,8 @@ $recent_requests = mysqli_query($conn, "
         .btn-sm { padding: 6px 12px; font-size: 12px; }
         .btn-success { background: var(--success); color: white; }
         .btn-success:hover { background: #059669; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #DC2626; }
 
         /* ===== Stats Grid ===== */
         .stats-grid {
@@ -285,6 +319,13 @@ $recent_requests = mysqli_query($conn, "
         }
     </style>
     <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
+    <script>
+        function deleteReport(reportId) {
+            if (confirm('คุณแน่ใจหรือไม่ที่จะลบรายงานนี้? การกระทำนี้ไม่สามารถยกเลิกได้')) {
+                window.location.href = 'delete_report.php?id=' + reportId;
+            }
+        }
+    </script>
 </head>
 <body>
 
@@ -303,8 +344,8 @@ $recent_requests = mysqli_query($conn, "
     $msg = $_GET['msg'] ?? '';
     if ($msg): 
     ?>
-    <div style="background: <?= $msg == 'resolved' ? 'var(--success-light)' : 'var(--danger-light)' ?>; 
-                color: <?= $msg == 'resolved' ? '#166534' : '#991B1B' ?>; 
+    <div style="background: <?= in_array($msg, ['resolved', 'deleted']) ? 'var(--success-light)' : 'var(--danger-light)' ?>; 
+                color: <?= in_array($msg, ['resolved', 'deleted']) ? '#166534' : '#991B1B' ?>; 
                 padding: 15px 20px; 
                 border-radius: 12px; 
                 margin-bottom: 20px; 
@@ -314,6 +355,8 @@ $recent_requests = mysqli_query($conn, "
                 gap: 10px;">
         <?php if($msg == 'resolved'): ?>
             <i class="fas fa-check-circle"></i> แก้ไขปัญหาเรียบร้อยแล้ว สถานะถูกเปลี่ยนเป็น "เสร็จสิ้น"
+        <?php elseif($msg == 'deleted'): ?>
+            <i class="fas fa-trash-alt"></i> ลบรายงานสำเร็จ
         <?php elseif($msg == 'notfound'): ?>
             <i class="fas fa-exclamation-circle"></i> ไม่พบรายงานที่ต้องการ
         <?php elseif($msg == 'error'): ?>
@@ -392,7 +435,7 @@ $recent_requests = mysqli_query($conn, "
                 </tr>
             </thead>
             <tbody>
-                <?php while($row = mysqli_fetch_assoc($all_reports)): ?>
+                <?php while($row = $all_reports->fetch_assoc()): ?>
                 <tr>
                     <td style="font-weight: 600; color: var(--text-muted);"><?= $row['report_id'] ?></td>
                     <td>
@@ -445,8 +488,8 @@ $recent_requests = mysqli_query($conn, "
             </div>
             <div class="card-body">
                 <?php 
-                mysqli_data_seek($stats_by_dept, 0);
-                while($dept = mysqli_fetch_assoc($stats_by_dept)): 
+                $stats_by_dept->data_seek(0);
+                while($dept = $stats_by_dept->fetch_assoc()): 
                     $percentage = $dept['total_students'] > 0 ? round(($dept['students_with_internship'] / $dept['total_students']) * 100) : 0;
                 ?>
                 <div class="progress-item">
@@ -468,8 +511,8 @@ $recent_requests = mysqli_query($conn, "
             </div>
             <div class="card-body">
                 <?php 
-                mysqli_data_seek($stats_by_level, 0);
-                while($level = mysqli_fetch_assoc($stats_by_level)): 
+                $stats_by_level->data_seek(0);
+                while($level = $stats_by_level->fetch_assoc()): 
                     $percentage = $level['total'] > 0 ? round(($level['with_internship'] / $level['total']) * 100) : 0;
                 ?>
                 <div class="progress-item">
@@ -503,8 +546,8 @@ $recent_requests = mysqli_query($conn, "
                 </tr>
             </thead>
             <tbody>
-                <?php if(mysqli_num_rows($recent_requests) > 0): ?>
-                    <?php while($row = mysqli_fetch_assoc($recent_requests)): ?>
+                <?php if($recent_requests->num_rows > 0): ?>
+                    <?php while($row = $recent_requests->fetch_assoc()): ?>
                     <tr>
                         <td>
                             <div style="font-weight: 600;"><?= htmlspecialchars($row['std_name'] . ' ' . $row['std_lastname']) ?></div>

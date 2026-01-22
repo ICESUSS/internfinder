@@ -33,7 +33,6 @@ if ($notif['is_read'] == 0) {
     $upd->execute();
 }
 
-
 // Check for approved internship if this is an approval notification
 $intern_link_btn = "";
 if (strpos($notif['title'], 'อนุมัติ') !== false) {
@@ -42,7 +41,10 @@ if (strpos($notif['title'], 'อนุมัติ') !== false) {
     $stmt_chk->execute();
     $res_chk = $stmt_chk->get_result();
     if ($row_chk = $res_chk->fetch_assoc()) {
-        $intern_link_btn = '<a href="print_request.php?id='.$row_chk['intern_id'].'" target="_blank" class="w3-button w3-green w3-round-large"><i class="fas fa-file-pdf"></i> พิมพ์ใบคำร้องขอฝึกงาน</a>';
+        $intern_link_btn = '
+            <a href="print_request.php?id='.$row_chk['intern_id'].'" target="_blank" class="w3-button w3-green w3-round-large"><i class="fas fa-file-pdf"></i> พิมพ์ใบคำร้องขอฝึกงาน</a>
+            <a href="../img/หนังสืออนุญาตจากผู้ปกครอง.pdf" target="_blank" class="w3-button w3-orange w3-text-white w3-round-large"><i class="fas fa-file-download"></i> ดาวน์โหลดหนังสืออนุญาตจากผู้ปกครอง</a>
+        ';
     }
 }
 ?>
@@ -53,8 +55,9 @@ if (strpos($notif['title'], 'อนุมัติ') !== false) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายละเอียดการแจ้งเตือน - Internfinder</title>
     <link rel="stylesheet" href="../assets/css/student-dashboard.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+    <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
     <style>
         .detail-card {
             background: white;
@@ -90,6 +93,7 @@ if (strpos($notif['title'], 'อนุมัติ') !== false) {
             display: flex;
             gap: 15px;
             justify-content: center;
+            flex-wrap: wrap;
         }
         @media print {
             .no-print { display: none !important; }
@@ -99,34 +103,34 @@ if (strpos($notif['title'], 'อนุมัติ') !== false) {
     </style>
 </head>
 <body>
+    <?php include 'includes/header.php'; ?>
 
-    <header class="no-print">
-        <a href="index.php" style="color:white; text-decoration:none;"><i class="fas fa-chevron-left"></i> กลับหน้าหลัก</a>
-        <div class="logo">Internfinder</div>
-        <div style="width:50px"></div>
-    </header>
 
-    <main class="w3-container">
-        <div class="detail-card">
-            <div class="detail-header">
+<main class="w3-container">
+    <div class="detail-card">
+        <div class="detail-header">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
                 <h2 class="detail-title"><?php echo htmlspecialchars($notif['title']); ?></h2>
-                <div class="detail-meta">
-                    <i class="far fa-clock"></i> <?php echo date('d/m/Y H:i', strtotime($notif['created_at'])); ?> น.
-                </div>
+                <?php if (strpos($notif['title'], 'อนุมัติ') !== false): ?>
+                    <span class="w3-tag w3-green w3-round" style="padding: 5px 15px;">อนุมัติแล้ว</span>
+                <?php endif; ?>
             </div>
-            
-            <div class="detail-body">
-                <?php echo htmlspecialchars($notif['message']); ?>
-            </div>
-
-            <div class="action-bar no-print">
-                <button onclick="window.print()" class="w3-button w3-grey w3-round-large">
-                    <i class="fas fa-print"></i> พิมพ์หน้านี้
-                </button>
-                <?php if ($intern_link_btn) echo $intern_link_btn; ?>
+            <div class="detail-meta">
+                <i class="far fa-clock"></i> <?php echo date('d/m/Y H:i', strtotime($notif['created_at'])); ?> น.
             </div>
         </div>
-    </main>
+        
+        <div class="detail-body">
+            <?php echo htmlspecialchars($notif['message']); ?>
+        </div>
+
+        <div class="action-bar no-print">
+    
+            <?php if ($intern_link_btn) echo $intern_link_btn; ?>
+        </div>
+    </div>
+</main>
+
 
 </body>
 </html>

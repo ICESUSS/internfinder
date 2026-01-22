@@ -468,10 +468,6 @@ textarea {
         border-radius: 8px !important;
     }
     
-    .banner .slide {
-        padding-top: 45% !important;
-    }
-    
     .banner .caption {
         font-size: 0.9rem !important;
         left: 10px !important;
@@ -504,10 +500,6 @@ textarea {
 }
 
 @media (max-width: 480px) {
-    .banner .slide {
-        padding-top: 56% !important;
-    }
-    
     .banner .banner-btn.playpause {
         display: none !important;
     }

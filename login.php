@@ -19,8 +19,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            // รองรับทั้งแบบรหัสผ่านตรงๆ และแบบ Hashed
-            if ($password === $row['std_password'] || password_verify($password, $row['std_password'])) {
+            // ตรวจสอบรหัสผ่าน - ใช้ password_verify() เท่านั้น
+            $password_valid = false;
+            
+            // ถ้ารหัสผ่านเป็น hashed (เริ่มต้นด้วย $2y$ หรือ $2a$ หรือ $2b$)
+            if (preg_match('/^\$2[ayb]\$/', $row['std_password'])) {
+                $password_valid = password_verify($password, $row['std_password']);
+                // ถ้า verify สำเร็จและเป็น plain text เก่า ให้ hash ใหม่
+                if ($password_valid) {
+                    // Optional: Upgrade old plain text passwords to hashed
+                    // Uncomment if you want to auto-upgrade
+                    // $new_hash = password_hash($password, PASSWORD_DEFAULT);
+                    // $update_stmt = $conn->prepare("UPDATE tb_student SET std_password = ? WHERE std_id = ?");
+                    // $update_stmt->bind_param("ss", $new_hash, $row['std_id']);
+                    // $update_stmt->execute();
+                }
+            } else {
+                // ถ้ายังเป็น plain text (ไม่ควรใช้ แต่รองรับเพื่อ migration)
+                // เปรียบเทียบและ hash ใหม่ทันที
+                if ($password === $row['std_password']) {
+                    $password_valid = true;
+                    // Hash รหัสผ่านใหม่ทันที
+                    $new_hash = password_hash($password, PASSWORD_DEFAULT);
+                    $update_stmt = $conn->prepare("UPDATE tb_student SET std_password = ? WHERE std_id = ?");
+                    $update_stmt->bind_param("ss", $new_hash, $row['std_id']);
+                    $update_stmt->execute();
+                    $update_stmt->close();
+                }
+            }
+            
+            if ($password_valid) {
                 $_SESSION['user_id'] = $row['std_id'];
                 $_SESSION['user_name'] = $row['std_name'] . ' ' . $row['std_lastname'];
                 $_SESSION['user_type'] = 'student';
@@ -42,8 +70,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            // รองรับทั้งแบบรหัสผ่านตรงๆ และแบบ Hashed
-            if ($password === $row['ad_password'] || password_verify($password, $row['ad_password'])) {
+            // ตรวจสอบรหัสผ่าน - ใช้ password_verify() เท่านั้น
+            $password_valid = false;
+            
+            // ถ้ารหัสผ่านเป็น hashed (เริ่มต้นด้วย $2y$ หรือ $2a$ หรือ $2b$)
+            if (preg_match('/^\$2[ayb]\$/', $row['ad_password'])) {
+                $password_valid = password_verify($password, $row['ad_password']);
+            } else {
+                // ถ้ายังเป็น plain text (ไม่ควรใช้ แต่รองรับเพื่อ migration)
+                // เปรียบเทียบและ hash ใหม่ทันที
+                if ($password === $row['ad_password']) {
+                    $password_valid = true;
+                    // Hash รหัสผ่านใหม่ทันที
+                    $new_hash = password_hash($password, PASSWORD_DEFAULT);
+                    $update_stmt = $conn->prepare("UPDATE tb_admin SET ad_password = ? WHERE ad_id = ?");
+                    $update_stmt->bind_param("ss", $new_hash, $row['ad_id']);
+                    $update_stmt->execute();
+                    $update_stmt->close();
+                }
+            }
+            
+            if ($password_valid) {
                 $_SESSION['user_id'] = $row['ad_id'];
                 $_SESSION['user_type'] = 'admin';
                 header("Location: admin/index.php");

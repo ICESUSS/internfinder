@@ -44,8 +44,11 @@ if (!$student) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>โปรไฟล์ของฉัน - Internfinder</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+    <link rel="stylesheet" href="../assets/css/student-dashboard.css">
+    <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
     <style>
         body { background-color: #f4f7f6; font-family: 'Prompt', sans-serif; }
         .profile-header { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); height: 180px; border-radius: 0 0 50px 50px; }
@@ -58,8 +61,12 @@ if (!$student) {
     </style>
 </head>
 <body>
+    <?php include 'includes/header.php'; ?>
+
 
 <div class="profile-header"></div>
+
+<main>
 
 <div class="container mb-5">
     <div class="row justify-content-center">
@@ -225,6 +232,8 @@ if (!$student) {
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</main>
+
+
 </body>
 </html>

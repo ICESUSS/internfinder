@@ -19,13 +19,12 @@ $conditions = [];
 $params = [];
 $types = "";
 
-if (!empty($search)) {
-    $conditions[] = "(com_name LIKE ? OR com_address LIKE ?)";
+    $conditions[] = "(com_name LIKE ? OR com_add_no LIKE ? OR com_road LIKE ? OR com_subdistrict LIKE ? OR com_district LIKE ? OR com_province LIKE ? OR com_zipcode LIKE ?)";
     $search_param = "%$search%";
+    $params[] = $search_param; $params[] = $search_param; $params[] = $search_param;
+    $params[] = $search_param; $params[] = $search_param; $params[] = $search_param;
     $params[] = $search_param;
-    $params[] = $search_param;
-    $types .= "ss";
-}
+    $types .= "sssssss";
 
 $where_clause = "";
 if (!empty($conditions)) {
@@ -53,7 +52,7 @@ if (!empty($params)) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <style>
         :root {
             --primary: #4F46E5;
@@ -376,7 +375,8 @@ if (!empty($params)) {
                 <td data-label="ข้อมูลติดต่อ">
                     <div style="font-size:13px"><i class="fas fa-phone-alt" style="width:16px"></i> <?= htmlspecialchars($row['com_tel'] ?? '-') ?></div>
                     <div style="font-size:12px; color:var(--text-muted); max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                        <i class="fas fa-map-marker-alt" style="width:16px"></i> <?= htmlspecialchars($row['com_address'] ?? '-') ?>
+                        <i class="fas fa-map-marker-alt" style="width:16px"></i> 
+                        <?= htmlspecialchars(($row['com_add_no'] ? $row['com_add_no'] . ' ' : '') . ($row['com_road'] ? 'ถ.' . $row['com_road'] . ' ' : '') . ($row['com_subdistrict'] ? 'ต.' . $row['com_subdistrict'] . ' ' : '') . ($row['com_district'] ? 'อ.' . $row['com_district'] . ' ' : '') . ($row['com_province'] ? 'จ.' . $row['com_province'] . ' ' : '') . ($row['com_zipcode'] ?? '')) ?: '-' ?>
                     </div>
                 </td>
                 <td data-label="วันที่สร้าง">

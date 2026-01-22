@@ -37,16 +37,16 @@ if ($id > 0) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>รายละเอียดสถานประกอบการ</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+<link rel="stylesheet" href="../assets/css/student-dashboard.css">
 <link rel="stylesheet" href="../assets/css/details.css">
 <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
 </head>
 
 <body>
+    <?php include 'includes/header.php'; ?>
 
-<header>
-    <a href="index.php" style="color:#fff;text-decoration:none;">← กลับ</a>
-</header>
 
 <div class="container">
 
@@ -70,7 +70,7 @@ if ($id > 0) {
 
         <h3>ที่อยู่</h3>
         <p class="info">
-            <?= nl2br(htmlspecialchars($company['com_address'])) ?>
+            <?= htmlspecialchars(($company['com_add_no'] ? $company['com_add_no'] . ' ' : '') . ($company['com_road'] ? 'ถ.' . $company['com_road'] . ' ' : '') . ($company['com_subdistrict'] ? 'ต.' . $company['com_subdistrict'] . ' ' : '') . ($company['com_district'] ? 'อ.' . $company['com_district'] . ' ' : '') . ($company['com_province'] ? 'จ.' . $company['com_province'] . ' ' : '') . ($company['com_zipcode'] ?? '')) ?: '-' ?>
         </p>
 
         <h3>ตำแหน่งฝึกงาน</h3>
@@ -80,8 +80,17 @@ if ($id > 0) {
                 $capacity = isset($job['job_capacity']) ? (int)$job['job_capacity'] : 0;
                 $applied_count = 0;
                 if ($capacity > 0) {
-                    $cap_res = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM tb_internship WHERE detail_id = " . (int)$job['detail_id'] . " AND status = 'approved'");
-                    $applied_count = mysqli_fetch_assoc($cap_res)['cnt'] ?? 0;
+                    $detail_id = (int)$job['detail_id'];
+                    $cap_stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM tb_internship WHERE detail_id = ? AND status = 'approved'");
+                    if ($cap_stmt) {
+                        $cap_stmt->bind_param("i", $detail_id);
+                        $cap_stmt->execute();
+                        $cap_res = $cap_stmt->get_result();
+                        if ($cap_res) {
+                            $applied_count = (int)($cap_res->fetch_assoc()['cnt'] ?? 0);
+                        }
+                        $cap_stmt->close();
+                    }
                 }
                 $is_full = ($capacity > 0 && $applied_count >= $capacity);
             ?>
@@ -154,5 +163,7 @@ if ($id > 0) {
 <?php endif; ?>
 
 </div>
+
+
 </body>
 </html>
