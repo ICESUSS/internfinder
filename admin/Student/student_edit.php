@@ -78,6 +78,8 @@ if ($deps_stmt) {
                 $update_stmt->close();
                 header("Location: student_list.php?update=success");
                 exit;
+            } else {
+                $message = "❌ เกิดข้อผิดพลาด: " . $conn->error;
             }
             $update_stmt->close();
         }

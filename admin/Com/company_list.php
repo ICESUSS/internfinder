@@ -384,7 +384,7 @@ if (!empty($params)) {
                 </td>
                 <td data-label="จัดการ">
                     <div style="display:flex; gap:5px;">
-                        <a class="btn btn-sm btn-view" title="ดูรายละเอียด" href="../Com/company_detail.php?id=<?= $row['com_id'] ?>"><i class="fas fa-eye"></i></a>
+                        <a class="btn btn-sm btn-view" title="ดูรายละเอียด" href="../Com/company_detail.php?com=<?= $row['com_id'] ?>"><i class="fas fa-eye"></i></a>
                         <a class="btn btn-sm btn-edit" title="แก้ไข" href="../Com/company_edit.php?id=<?= $row['com_id'] ?>"><i class="fas fa-edit"></i></a>
                         <a class="btn btn-sm btn-del" title="ลบ" href="../Com/company_delete.php?id=<?= $row['com_id'] ?>" onclick="return confirm('ยืนยันการลบสถานประกอบการนี้?')"><i class="fas fa-trash"></i></a>
                     </div>

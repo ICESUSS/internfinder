@@ -86,17 +86,60 @@ if ($std_id) {
 </main>
 
 
-// Submit report
+<script>
 document.getElementById('submitBtn').addEventListener('click', async function(){
     const subject = document.getElementById('subject').value.trim();
     const message = document.getElementById('message').value.trim();
     const msgEl = document.getElementById('formMsg');
+    const submitBtn = this;
+    
     msgEl.textContent = '';
+    msgEl.style.color = '#666';
 
-    if (!subject || !message) { msgEl.textContent = 'โปรดกรอกหัวข้อและรายละเอียด'; return; }
+    if (!subject || !message) { 
+        msgEl.textContent = 'โปรดกรอกหัวข้อและรายละเอียด'; 
+        msgEl.style.color = 'red';
+        return; 
+    }
 
+    try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่ง...';
+        
+        const formData = new FormData();
+        formData.append('subject', subject);
+        formData.append('message', message);
+
+        const response = await fetch('../api/api_report_issue.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            msgEl.textContent = 'ส่งรายงานสำเร็จ!';
+            msgEl.style.color = 'green';
+            document.getElementById('subject').value = '';
+            document.getElementById('message').value = '';
+            
+            // Wait 1.5s then reload to show new report
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            msgEl.textContent = 'เกิดข้อผิดพลาด: ' + (data.error || 'ไม่ทราบสาเหตุ');
+            msgEl.style.color = 'red';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'ส่งรายงาน';
         }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+        console.error(err); 
+        msgEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+        msgEl.style.color = 'red';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'ส่งรายงาน';
+    }
 });
 </script>
 

@@ -62,19 +62,27 @@ if (isset($_POST['save_job'])) {
             $ustmt = $conn->prepare("UPDATE tb_company_detail SET job_title=?, job_type=?, job_description=?, job_qualification=?, job_welfare=?, allowance=?, work_time=?, work_day=?, job_capacity=? WHERE detail_id=?");
             if ($ustmt) {
                 $ustmt->bind_param('ssssssssii', $job_title, $job_type, $job_description, $job_qualification, $job_welfare, $allowance, $work_time, $work_day, $job_capacity, $job_id);
-                $ustmt->execute();
+                if ($ustmt->execute()) {
+                    $ustmt->close();
+                    header('Location: company_detail.php?com=' . $com_id . '&msg=updated');
+                    exit;
+                } else {
+                    $msg = 'เกิดข้อผิดพลาดในการแก้ไข: ' . $conn->error;
+                }
                 $ustmt->close();
-                header('Location: company_detail.php?com=' . $com_id . '&msg=updated');
-                exit;
             }
         } else {
             $istmt = $conn->prepare("INSERT INTO tb_company_detail (com_id, job_title, job_type, job_description, job_qualification, job_welfare, allowance, work_time, work_day, job_capacity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             if ($istmt) {
                 $istmt->bind_param('issssssssi', $com_id, $job_title, $job_type, $job_description, $job_qualification, $job_welfare, $allowance, $work_time, $work_day, $job_capacity);
-                $istmt->execute();
+                if ($istmt->execute()) {
+                    $istmt->close();
+                    header('Location: company_detail.php?com=' . $com_id . '&msg=added');
+                    exit;
+                } else {
+                    $msg = 'เกิดข้อผิดพลาดในการเพิ่ม: ' . $conn->error;
+                }
                 $istmt->close();
-                header('Location: company_detail.php?com=' . $com_id . '&msg=added');
-                exit;
             }
         }
     }
@@ -117,7 +125,7 @@ if ($cres !== false) {
 }
 
 // Selected company (default to first)
-$sel_com = isset($_GET['com']) ? (int)$_GET['com'] : (count($companies) ? (int)$companies[0]['com_id'] : 0);
+$sel_com = isset($_GET['com']) ? (int)$_GET['com'] : (isset($_GET['id']) ? (int)$_GET['id'] : (count($companies) ? (int)$companies[0]['com_id'] : 0));
 
 // If editing, load job
 $editing = null;
@@ -305,6 +313,13 @@ if ($sel_com > 0) {
 <body>
 
 <div class="container">
+    <?php if(!empty($msg)): ?>
+        <div class="alert-float" style="border-left-color: var(--danger); background: #FFF1F2;">
+            <i class="fas fa-exclamation-circle text-danger"></i> 
+            <?= htmlspecialchars($msg) ?>
+        </div>
+    <?php endif; ?>
+
     <?php if(isset($_GET['msg'])): ?>
         <div class="alert-float">
             <i class="fas fa-check-circle"></i> 

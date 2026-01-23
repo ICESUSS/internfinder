@@ -84,5 +84,56 @@ if ($std_id) {
     </main>
 
 
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const saveButtons = document.querySelectorAll('.save-btn');
+        
+        saveButtons.forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const comId = this.getAttribute('data-com-id');
+                const card = document.getElementById('card-' + comId);
+                
+                if (!confirm('ยืนยันในการยกเลิกการบันทึก?')) return;
+                
+                try {
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    
+                    const formData = new FormData();
+                    formData.append('com_id', comId);
+                    
+                    const response = await fetch('../api/api_save_company.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && !data.saved) {
+                        card.style.transition = 'opacity 0.3s';
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.remove();
+                            if (document.querySelectorAll('.company-list .card').length === 0) {
+                                location.reload(); // Show empty state
+                            }
+                        }, 300);
+                    } else if (data.success && data.saved) {
+                        location.reload();
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + (data.error || 'ไม่ทราบสาเหตุ'));
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fas fa-bookmark"></i>';
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-bookmark"></i>';
+                }
+            });
+        });
+    });
+    </script>
 </body>
 </html>

@@ -70,49 +70,63 @@ if (preg_match('/(ปวช\.|ปวส\.)\s*(\d+)/u', $data['std_level'], $matc
         }
         body {
             font-family: 'Sarabun', sans-serif;
-            font-size: 15px; /* Slightly reduced */
-            line-height: 1.3; /* Tighter line height */
+            font-size: 14px;
+            line-height: 1.5;
             background: #f0f0f0;
             margin: 0;
-            padding: 10px;
+            padding: 0;
         }
         .page {
             width: 210mm;
-            height: 297mm; /* Fixed height for A4 */
-            padding: 0.8cm 1.5cm; /* Reduced margins */
+            height: 297mm;
+            padding: 1cm 1.5cm;
             margin: 0 auto;
             background: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             position: relative;
             box-sizing: border-box;
-            overflow: hidden; /* Ensure nothing spills over */
+            overflow: hidden;
         }
         @media print {
-            body { background: none; padding: 0; }
-            .page { box-shadow: none; margin: 0; height: 297mm; width: 210mm; }
+            body { 
+                background: white; 
+                padding: 0; 
+                margin: 0;
+            }
+            .page { 
+                box-shadow: none; 
+                margin: 0; 
+                padding: 1cm 1.5cm;
+                width: 210mm;
+                height: 297mm;
+            }
             .no-print { display: none; }
+            @page {
+                margin: 0;
+            }
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .bold { font-weight: bold; }
         
         .header-title {
-            font-size: 18px; /* Slightly smaller */
+            font-size: 18px;
             font-weight: bold;
-            margin-bottom: 10px; /* Reduced */
+            margin-bottom: 8px;
             margin-top: 0;
         }
 
         .info-row {
             display: flex;
-            margin-bottom: 2px; /* Tighter */
+            margin-bottom: 4px;
             align-items: baseline;
+            line-height: 1.6;
         }
         .dotted {
             border-bottom: 1px dotted #000;
             padding: 0 5px;
             flex-grow: 1;
-            min-height: 20px; /* Reduced */
+            min-height: 20px;
             display: flex;
             align-items: center;
         }
@@ -138,46 +152,79 @@ if (preg_match('/(ปวช\.|ปวส\.)\s*(\d+)/u', $data['std_level'], $matc
         .footer-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px; /* Reduced */
+            margin-top: 8px;
         }
         .footer-table td {
             border: 1px solid #000;
             vertical-align: top;
-            padding: 6px; /* Reduced padding */
-            font-size: 13px; /* Slightly smaller */
+            padding: 5px;
+            font-size: 12px;
+            line-height: 1.5;
         }
         
         .signature-box {
-            margin-top: 15px; /* Reduced */
+            margin-top: 12px;
             margin-left: auto;
             width: 280px;
             text-align: center;
+            font-size: 13px;
+            line-height: 1.6;
         }
 
-        .indent { padding-left: 1.5cm; } /* Reduced indent */
-        .section-title { margin-top: 8px; font-weight: bold; }
+        .indent { padding-left: 1.5cm; }
+        .section-title { margin-top: 6px; font-weight: bold; font-size: 13px; line-height: 1.5; }
+
+        /* Print Button Styles */
+        .no-print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            z-index: 1000;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Sarabun', sans-serif;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+        .no-print-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        }
+        .no-print-btn:active {
+            transform: translateY(0);
+        }
+        @media print {
+            .no-print-btn { display: none !important; }
+            body { background: white; }
+            .page { margin: 0; box-shadow: none; }
+        }
     </style>
 </head>
 <body>
 
-<div class="no-print" style="text-align:center; margin-bottom: 20px; display: flex; justify-content: center; gap: 10px;">
-    <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; background: #4F46E5; color: white; border: none; border-radius: 5px;">
-        <i class="fas fa-print"></i> พิมพ์เอกสาร
-    </button>
-    <a href="../img/หนังสืออนุญาตจากผู้ปกครอง.pdf" target="_blank" style="padding: 10px 20px; text-decoration: none; background: #F59E0B; color: white; border-radius: 5px; font-weight: 500;">
-        <i class="fas fa-file-download"></i> ดาวน์โหลดหนังสืออนุญาตจากผู้ปกครอง
-    </a>
-</div>
-<br>
-</br>
+<button onclick="window.print()" class="no-print-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+    พิมพ์เอกสาร / ดาวน์โหลด PDF
+</button>
 
 <div class="page">
     <div class="header-title text-center">หนังสือคำร้องขอฝึกอาชีพ/ฝึกงานในสถานประกอบการ</div>
     <br>
 </br>
-
-    <div class="text-right" style="margin-bottom: 2px;">เขียนที่วิทยาลัยเทคนิคสุพรรณบุรี</div>
-    <div class="text-right" style="margin-bottom: 10px;">
+    
+    <div class="text-right" style="margin-bottom: 5px; font-size: 13px; line-height: 1.6;">เขียนที่วิทยาลัยเทคนิคสุพรรณบุรี</div>
+    <div class="text-right" style="margin-bottom: 10px; font-size: 13px; line-height: 1.6;">
         วันที่ <span style="display:inline-block; width:20px; border-bottom:1px dotted #000; text-align:center;"><?= $current_day ?></span>
         เดือน <span style="display:inline-block; width:80px; border-bottom:1px dotted #000; text-align:center;"><?= $current_month ?></span>
         พ.ศ. <span style="display:inline-block; width:45px; border-bottom:1px dotted #000; text-align:center;"><?= $current_year ?></span>
@@ -213,91 +260,88 @@ if (preg_match('/(ปวช\.|ปวส\.)\s*(\d+)/u', $data['std_level'], $matc
         <span>เบอร์โทรศัพท์นักศึกษา</span>
         <div class="dotted"><?= htmlspecialchars($data['std_tel']) ?></div>
         <span>เบอร์โทรศัพท์ผู้ปกครอง</span>
-        <div class="dotted"><?= htmlspecialchars($data['parent_tel'] ?? '............................................') ?></div>
+        <div class="dotted"><?= htmlspecialchars($data['parent_tel'] ?? '') ?></div>
     </div>
 
     <div class="info-row">
         <span>มีผลการเรียนเฉลี่ยสะสม</span>
-        <div class="dotted" style="flex-grow:0; width: 100px;"><?= htmlspecialchars($data['gpax'] ?? '..............') ?></div>
+        <div class="dotted" style="flex-grow:0; width: 100px;"><?= htmlspecialchars($data['gpax'] ?? '') ?></div>
         <span>มีความประสงค์ขอฝึกอาชีพ/ฝึกงาน ภาคเรียนที่</span>
-        <div class="dotted" style="flex-grow:0; width: 150px; text-align:center; justify-content:center;"><?= htmlspecialchars($data['term'] ?? '..../........') ?></div>
+        <div class="dotted" style="flex-grow:0; width: 150px; text-align:center; justify-content:center;"><?= htmlspecialchars($data['term'] ?? '') ?></div>
     </div>
 
     <div class="info-row">
         <span>ระหว่างวันที่</span>
-        <div class="dotted"><?= !empty($data['start_date']) ? date('d/m/', strtotime($data['start_date'])) . (date('Y', strtotime($data['start_date'])) + 543) : '....................................................................' ?></div>
+        <div class="dotted"><?= !empty($data['start_date']) ? date('d/m/', strtotime($data['start_date'])) . (date('Y', strtotime($data['start_date'])) + 543) : '' ?></div>
         <span>ถึงวันที่</span>
-        <div class="dotted"><?= !empty($data['end_date']) ? date('d/m/', strtotime($data['end_date'])) . (date('Y', strtotime($data['end_date'])) + 543) : '....................................................................' ?></div>
+        <div class="dotted"><?= !empty($data['end_date']) ? date('d/m/', strtotime($data['end_date'])) . (date('Y', strtotime($data['end_date'])) + 543) : '' ?></div>
     </div>
 
-    <div style="margin-top: 10px;">
+    <div style="margin-top: 8px;">
         <div class="info-row">
             <span class="checkbox"><?= ($data['request_type'] == '1') ? '✓' : '' ?></span>
             <span class="bold">1. หาสถานที่ฝึกอาชีพฝึกอาชีพ/ฝึกงานเอง ที่ (ชื่อสถานประกอบการ)</span>
         </div>
-        <div class="dotted" style="margin-left: 20px; margin-bottom: 5px;"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_name']) : '' ?></div>
+        <div class="dotted" style="margin-left: 20px; margin-bottom: 6px;"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_name']) : '' ?></div>
         
         <div style="margin-left: 20px;">
             <div class="info-row">
                 <span>ตำแหน่งที่ติดต่อ</span>
-                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_contact_pos'] ?? '') : '......................................................................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_contact_pos'] ?? '') : '' ?></div>
                 <span>เลขที่</span>
-                <div class="dotted" style="flex-grow:0; width: 60px;"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_add_no'] ?? '') : '........' ?></div>
+                <div class="dotted" style="flex-grow:0; width: 60px;"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_add_no'] ?? '') : '' ?></div>
                 <span>ถนน</span>
-                <div class="dotted" style="flex-grow:0; width: 100px;"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_road'] ?? '') : '................' ?></div>
+                <div class="dotted" style="flex-grow:0; width: 100px;"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_road'] ?? '') : '' ?></div>
             </div>
             <div class="info-row">
                 <span>ตำบล</span>
-                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_subdistrict'] ?? '') : '.......................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_subdistrict'] ?? '') : '' ?></div>
                 <span>อำเภอ</span>
-                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_district'] ?? '') : '.......................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_district'] ?? '') : '' ?></div>
                 <span>จังหวัด</span>
-                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_province'] ?? '') : '.......................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_province'] ?? '') : '' ?></div>
             </div>
             <div class="info-row">
                 <span>รหัสไปรษณีย์</span>
-                <div class="dotted" style="flex-grow:0; width: 80px;"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_zipcode'] ?? '') : '................' ?></div>
+                <div class="dotted" style="flex-grow:0; width: 80px;"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_zipcode'] ?? '') : '' ?></div>
                 <span>โทร</span>
-                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_tel']) : '.......................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '1') ? htmlspecialchars($data['com_tel']) : '' ?></div>
             </div>
         </div>
     </div>
 
-    <div style="margin-top: 10px;">
+    <div style="margin-top: 8px;">
         <div class="info-row">
             <span class="checkbox"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? '✓' : '' ?></span>
             <span class="bold">2. ให้วิทยาลัยหาสถานที่ฝึกอาชีพ/ฝึกงานให้ (ชื่อสถานประกอบการ)</span>
         </div>
-        <div class="dotted" style="margin-left: 20px; margin-bottom: 5px;"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_name']) : '.........................................................................................................................' ?></div>
+        <div class="dotted" style="margin-left: 20px; margin-bottom: 6px;"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_name']) : '' ?></div>
         
         <div style="margin-left: 20px;">
             <div class="info-row">
                 <span>เลขที่</span>
-                <div class="dotted" style="flex-grow:0; width: 60px;"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_add_no'] ?? '') : '........' ?></div>
+                <div class="dotted" style="flex-grow:0; width: 60px;"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_add_no'] ?? '') : '' ?></div>
                 <span>ถนน</span>
-                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_road'] ?? '') : '........................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_road'] ?? '') : '' ?></div>
                 <span>ตำบล</span>
-                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_subdistrict'] ?? '') : '........................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_subdistrict'] ?? '') : '' ?></div>
                 <span>อำเภอ</span>
-                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_district'] ?? '') : '........................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_district'] ?? '') : '' ?></div>
             </div>
             <div class="info-row">
                 <span>จังหวัด</span>
-                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_province'] ?? '') : '........................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_province'] ?? '') : '' ?></div>
                 <span>รหัสไปรษณีย์</span>
-                <div class="dotted" style="flex-grow:0; width: 80px;"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_zipcode'] ?? '') : '................' ?></div>
+                <div class="dotted" style="flex-grow:0; width: 80px;"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_zipcode'] ?? '') : '' ?></div>
                 <span>โทร</span>
-                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_tel']) : '.......................' ?></div>
+                <div class="dotted"><?= ($data['request_type'] == '2' || empty($data['request_type'])) ? htmlspecialchars($data['com_tel']) : '' ?></div>
             </div>
         </div>
     </div>
-
 <br>
-
-
-    
 </br>
-    <div class="text-center" style="margin-top: 10px; font-weight: bold;">จึงเรียนมาเพื่อโปรดทราบ</div>
+    
+    <div class="text-center" style="margin-top: 12px; font-weight: bold; font-size: 14px; line-height: 1.6;">จึงเรียนมาเพื่อโปรดทราบ</div>
 
     <div class="signature-box">
         <div>ลงชื่อ..................................................................</div>
@@ -309,33 +353,33 @@ if (preg_match('/(ปวช\.|ปวส\.)\s*(\d+)/u', $data['std_level'], $matc
         <tr>
             <td width="55%">
                 <div class="section-title">ความเห็นของครูที่ปรึกษา</div>
-                <div style="margin-top: 2px;"><span class="checkbox"></span> อนุญาต <span class="checkbox"></span> ได้ตรวจสอบคุณสมบัติสถานประกอบการแล้ว</div>
-                <div style="margin-top: 12px;">ลงชื่อ..................................................................</div>
-                <div class="text-center">(..................................................................)</div>
+                <div style="margin-top: 2px; font-size: 11px; line-height: 1.5;"><span class="checkbox"></span> อนุญาต <span class="checkbox"></span> ได้ตรวจสอบคุณสมบัติสถานประกอบการแล้ว</div>
+                <div style="margin-top: 8px; font-size: 11px; line-height: 1.5;">ลงชื่อ..................................................................</div>
+                <div class="text-center" style="font-size: 11px; line-height: 1.5;">(..................................................................)</div>
                 
                 <div class="section-title">ความเห็นของทวิภาคีแผนก</div>
-                <div style="margin-top: 2px;"><span class="checkbox"></span> อนุญาต <span class="checkbox"></span> ได้ตรวจสอบคุณสมบัติสถานประกอบการแล้ว</div>
-                <div style="margin-top: 12px;">ลงชื่อ..................................................................</div>
-                <div class="text-center">(..................................................................)</div>
+                <div style="margin-top: 2px; font-size: 11px; line-height: 1.5;"><span class="checkbox"></span> อนุญาต <span class="checkbox"></span> ได้ตรวจสอบคุณสมบัติสถานประกอบการแล้ว</div>
+                <div style="margin-top: 8px; font-size: 11px; line-height: 1.5;">ลงชื่อ..................................................................</div>
+                <div class="text-center" style="font-size: 11px; line-height: 1.5;">(..................................................................)</div>
 
-                <div class="section-title">ความเห็นของหัวหน้าแผนกวิชา <span class="dotted" style="display:inline-block; width:120px;"></span></div>
-                <div style="margin-top: 2px;"><span class="checkbox"></span> อนุญาต <span class="checkbox"></span> ได้ตรวจสอบคุณสมบัติสถานประกอบการแล้ว</div>
-                <div style="margin-top: 12px;">ลงชื่อ..................................................................</div>
-                <div class="text-center">(..................................................................)</div>
+                <div class="section-title">ความเห็นของหัวหน้าแผนกวิชา <span class="dotted" style="display:inline-block; width:100px;"></span></div>
+                <div style="margin-top: 2px; font-size: 11px; line-height: 1.5;"><span class="checkbox"></span> อนุญาต <span class="checkbox"></span> ได้ตรวจสอบคุณสมบัติสถานประกอบการแล้ว</div>
+                <div style="margin-top: 8px; font-size: 11px; line-height: 1.5;">ลงชื่อ..................................................................</div>
+                <div class="text-center" style="font-size: 11px; line-height: 1.5;">(..................................................................)</div>
             </td>
             <td width="45%">
                 <div class="section-title">หัวหน้างานอาชีวศึกษาระบบทวิภาคี</div>
-                <div style="margin-top: 8px; border-bottom: 1px dotted #000; height: 18px;"></div>
-                <div style="margin-top: 2px; border-bottom: 1px dotted #000; height: 18px;"></div>
-                <div style="margin-top: 12px; text-align: center;">
+                <div style="margin-top: 5px; border-bottom: 1px dotted #000; height: 16px;"></div>
+                <div style="margin-top: 2px; border-bottom: 1px dotted #000; height: 16px;"></div>
+                <div style="margin-top: 8px; text-align: center; font-size: 11px; line-height: 1.5;">
                     ลงชื่อ..........................................................<br>
                     (นายสุรเชษฐ์ ขาวโต)
                 </div>
 
-                <div class="section-title" style="margin-top: 15px;">รองผู้อำนวยการฝ่ายวิชาการ</div>
-                <div style="margin-top: 8px; border-bottom: 1px dotted #000; height: 18px;"></div>
-                <div style="margin-top: 2px; border-bottom: 1px dotted #000; height: 18px;"></div>
-                <div style="margin-top: 12px; text-align: center;">
+                <div class="section-title" style="margin-top: 10px;">รองผู้อำนวยการฝ่ายวิชาการ</div>
+                <div style="margin-top: 5px; border-bottom: 1px dotted #000; height: 16px;"></div>
+                <div style="margin-top: 2px; border-bottom: 1px dotted #000; height: 16px;"></div>
+                <div style="margin-top: 8px; text-align: center; font-size: 11px; line-height: 1.5;">
                     ลงชื่อ..........................................................<br>
                     (นายสุธีร์ แบนประเสริฐ)
                 </div>

@@ -24,7 +24,7 @@ if ($com_id <= 0) {
 // Ensure table exists (safe to run on each request)
 $createSql = "CREATE TABLE IF NOT EXISTS tb_saved (
     save_id INT AUTO_INCREMENT PRIMARY KEY,
-    std_id INT NOT NULL,
+    std_id VARCHAR(11) NOT NULL,
     com_id INT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uniq_std_com (std_id, com_id)
@@ -37,7 +37,7 @@ if (!$stmt) {
     echo json_encode(['success' => false, 'error' => 'db_prepare']);
     exit;
 }
-$stmt->bind_param('ii', $std_id, $com_id);
+$stmt->bind_param('si', $std_id, $com_id);
 $stmt->execute();
 $res = $stmt->get_result();
 $existing = ($res && $res->num_rows > 0) ? $res->fetch_assoc() : null;
@@ -60,7 +60,7 @@ if ($existing) {
     // insert
     $ins = $conn->prepare("INSERT INTO tb_saved (std_id, com_id) VALUES (?, ?)");
     if ($ins) {
-        $ins->bind_param('ii', $std_id, $com_id);
+        $ins->bind_param('si', $std_id, $com_id);
         $ok = $ins->execute();
         $ins->close();
         echo json_encode(['success' => (bool)$ok, 'saved' => (bool)$ok]);

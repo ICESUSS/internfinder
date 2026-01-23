@@ -304,5 +304,62 @@ if ($std_id) {
 
 
 
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const saveButtons = document.querySelectorAll('.save-btn');
+        
+        saveButtons.forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const comId = this.getAttribute('data-com-id');
+                const icon = this.querySelector('i');
+                const originalContent = this.innerHTML;
+                
+                try {
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    
+                    const formData = new FormData();
+                    formData.append('com_id', comId);
+                    
+                    const response = await fetch('../api/api_save_company.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.saved) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                        } else {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                        }
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + (data.error || 'ไม่ทราบสาเหตุ'));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+                } finally {
+                    this.disabled = false;
+                    this.innerHTML = originalContent;
+                    // Re-select icon because innerHTML was reset
+                    const newIcon = this.querySelector('i');
+                    if (typeof data !== 'undefined' && data.success) {
+                        if (data.saved) {
+                            newIcon.classList.remove('far');
+                            newIcon.classList.add('fas');
+                        } else {
+                            newIcon.classList.remove('fas');
+                            newIcon.classList.add('far');
+                        }
+                    }
+                }
+            });
+        });
+    });
+    </script>
 </body>
 </html>
