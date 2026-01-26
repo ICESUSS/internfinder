@@ -43,7 +43,7 @@ if (strpos($notif['title'], 'อนุมัติ') !== false) {
     if ($row_chk = $res_chk->fetch_assoc()) {
         $intern_link_btn = '
             <a href="print_request.php?id='.$row_chk['intern_id'].'" target="_blank" class="w3-button w3-green w3-round-large"><i class="fas fa-file-pdf"></i> พิมพ์ใบคำร้องขอฝึกงาน</a>
-            <a href="../img/หนังสืออนุญาตจากผู้ปกครอง.pdf" target="_blank" class="w3-button w3-orange w3-text-white w3-round-large"><i class="fas fa-file-download"></i> ดาวน์โหลดหนังสืออนุญาตจากผู้ปกครอง</a>
+            <a href="print_parent_consent.php?id='.$row_chk['intern_id'].'" target="_blank" class="w3-button w3-orange w3-text-white w3-round-large"><i class="fas fa-file-download"></i> ดาวน์โหลดหนังสืออนุญาตจากผู้ปกครอง</a>
         ';
     }
 }

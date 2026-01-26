@@ -209,8 +209,11 @@ if (!$student) {
                                                         <i class="fas fa-edit"></i> แก้ไข
                                                     </a>
                                                 <?php elseif ($status == 'approved'): ?>
-                                                    <a href="print_request.php?id=<?= $app['intern_id'] ?>" target="_blank" class="btn btn-sm btn-success">
+                                                    <a href="print_request.php?id=<?= $app['intern_id'] ?>" target="_blank" class="btn btn-sm btn-success mb-1">
                                                         <i class="fas fa-print"></i> พิมพ์ใบคำร้อง
+                                                    </a>
+                                                    <a href="print_parent_consent.php?id=<?= $app['intern_id'] ?>" target="_blank" class="btn btn-sm btn-info mb-1 text-white">
+                                                        <i class="fas fa-file-signature"></i> พิมพ์หนังสืออนุญาต
                                                     </a>
                                                 <?php endif; ?>
                                             </td>

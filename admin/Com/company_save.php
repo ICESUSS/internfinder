@@ -65,5 +65,5 @@ if (!empty($_FILES['com_img']['name'])) {
     }
 }
 
-header("Location: company_list.php?msg=" . ($com_id > 0 && isset($_POST['com_id']) && (int)$_POST['com_id'] > 0 ? 'updated' : 'added'));
+header("Location: company_list.php?msg=" . ($com_id > 0 ? 'updated' : 'added'));
 ?>

@@ -89,7 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Removal of strict status check on POST to allow editing document data
 
     $note = $_POST['note'];
+    $parent_name = $_POST['parent_name'];
+    $parent_relation = $_POST['parent_relation'];
     $parent_tel = $_POST['parent_tel'];
+    $parent_id_card = $_POST['parent_id_card'];
+    $parent_address = $_POST['parent_address'];
     $gpax = $_POST['gpax'];
     $request_type = $_POST['request_type'];
     $contact_name = $_POST['contact_name'] ?? '';
@@ -176,9 +180,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // ถ้ามี error ในการอัปโหลด ให้หยุดการทำงาน
         if (!isset($msg) || $msg_type !== 'error') {
-            $update_sql = "UPDATE tb_internship SET resume_file=?, transcript_file=?, note=?, parent_tel=?, gpax=?, request_type=?, contact_name=?, term=?, start_date=?, end_date=? WHERE intern_id=?";
+            $update_sql = "UPDATE tb_internship SET resume_file=?, transcript_file=?, note=?, parent_name=?, parent_relation=?, parent_tel=?, parent_id_card=?, parent_address=?, gpax=?, request_type=?, contact_name=?, term=?, start_date=?, end_date=? WHERE intern_id=?";
             $stmt_up = $conn->prepare($update_sql);
-            $stmt_up->bind_param("ssssssssssi", $resume_name, $transcript_name, $note, $parent_tel, $gpax, $request_type, $contact_name, $term, $start_date, $end_date, $existing_app['intern_id']);
+            $stmt_up->bind_param("ssssssssssssssi", $resume_name, $transcript_name, $note, $parent_name, $parent_relation, $parent_tel, $parent_id_card, $parent_address, $gpax, $request_type, $contact_name, $term, $start_date, $end_date, $existing_app['intern_id']);
             
             if ($stmt_up->execute()) {
                 $msg = "บันทึกการแก้ไขเรียบร้อยแล้ว!";
@@ -280,10 +284,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Skip insert
         } else {
             // บันทึกลงฐานข้อมูล tb_internship
-            $insert_sql = "INSERT INTO tb_internship (std_id, com_id, detail_id, resume_file, transcript_file, note, parent_tel, gpax, request_type, contact_name, term, start_date, end_date, status) 
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+            $insert_sql = "INSERT INTO tb_internship (std_id, com_id, detail_id, resume_file, transcript_file, note, parent_name, parent_relation, parent_tel, parent_id_card, parent_address, gpax, request_type, contact_name, term, start_date, end_date, status) 
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
             $stmt_ins = $conn->prepare($insert_sql);
-            $stmt_ins->bind_param("siissssssssss", $std_id, $com_id, $detail_id, $resume_name, $transcript_name, $note, $parent_tel, $gpax, $request_type, $contact_name, $term, $start_date, $end_date);
+            $stmt_ins->bind_param("siissssssssssssss", $std_id, $com_id, $detail_id, $resume_name, $transcript_name, $note, $parent_name, $parent_relation, $parent_tel, $parent_id_card, $parent_address, $gpax, $request_type, $contact_name, $term, $start_date, $end_date);
             
             if ($stmt_ins->execute()) {
                 $msg = "ส่งใบสมัครเรียบร้อยแล้ว! กรุณารอแอดมินตรวจสอบ";
@@ -397,15 +401,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="file-hint">(อัปโหลดใหม่เพื่อเปลี่ยนไฟล์)</div>
         </div>
 
+        <!-- ส่วนที่ 1: ข้อมูลการฝึกงาน (นักศึกษา) -->
         <div style="background: #E3F2FD; padding: 20px; border-radius: 10px; border: 1px solid #BBDEFB; margin-bottom: 25px;">
             <h5 style="margin-top:0; color:#0D47A1; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #90CAF9; padding-bottom:8px;">
-                <i class="fas fa-file-invoice"></i> ข้อมูลสำหรับแบบคำร้องขอฝึกงาน
+                <i class="fas fa-user-graduate"></i> ข้อมูลการฝึกงาน (นักศึกษา)
             </h5>
-
-            <div class="form-group">
-                <label><i class="fas fa-phone"></i> เบอร์โทรผู้ปกครอง</label>
-                <input type="text" name="parent_tel" class="form-control" placeholder="เช่น 081-234-5678" value="<?= htmlspecialchars($existing_app['parent_tel'] ?? '') ?>" required>
-            </div>
 
             <div class="form-group">
                 <label><i class="fas fa-graduation-cap"></i> เกรดเฉลี่ยสะสม (GPAX)</label>
@@ -443,6 +443,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="form-group" id="contact_name_group" style="<?= (isset($existing_app['request_type']) && $existing_app['request_type'] == '1') ? '' : 'display:none;' ?>">
                 <label>ตำแหน่งผู้ที่ติดต่อ (ถ้ามี)</label>
                 <input type="text" name="contact_name" class="form-control" placeholder="เช่น ผู้จัดการฝ่ายบุคคล" value="<?= htmlspecialchars($existing_app['contact_name'] ?? '') ?>">
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 2: ข้อมูลผู้ปกครอง -->
+        <div style="background: #FFF3E0; padding: 20px; border-radius: 10px; border: 1px solid #FFE0B2; margin-bottom: 25px;">
+            <h5 style="margin-top:0; color:#E65100; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #FFCC80; padding-bottom:8px;">
+                <i class="fas fa-user-friends"></i> ข้อมูลผู้ปกครอง (สำหรับหนังสือยินยอม)
+            </h5>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div class="form-group">
+                    <label style="font-size:14px;">ชื่อ-นามสกุล</label>
+                    <input type="text" name="parent_name" class="form-control" placeholder="ชื่อ-สกุล ผู้ปกครอง" value="<?= htmlspecialchars($existing_app['parent_name'] ?? '') ?>" required>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:14px;">ความเกี่ยวข้อง</label>
+                    <input type="text" name="parent_relation" class="form-control" placeholder="เช่น บิดา, มารดา" value="<?= htmlspecialchars($existing_app['parent_relation'] ?? '') ?>" required>
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div class="form-group">
+                    <label style="font-size:14px;">เบอร์โทรศัพท์</label>
+                    <input type="text" name="parent_tel" class="form-control" placeholder="เช่น 081-234-5678" value="<?= htmlspecialchars($existing_app['parent_tel'] ?? '') ?>" required maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label style="font-size:14px;">เลขบัตรประชาชน</label>
+                    <input type="text" name="parent_id_card" class="form-control" placeholder="เลข 13 หลัก" value="<?= htmlspecialchars($existing_app['parent_id_card'] ?? '') ?>" required maxlength="13">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label style="font-size:14px;">ที่อยู่ที่ติดต่อได้</label>
+                <textarea name="parent_address" class="form-control" rows="2" placeholder="บ้านเลขที่, หมู่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด" required><?= htmlspecialchars($existing_app['parent_address'] ?? '') ?></textarea>
             </div>
         </div>
 

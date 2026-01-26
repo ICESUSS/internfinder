@@ -260,7 +260,7 @@ if (preg_match('/(ปวช\.|ปวส\.)\s*(\d+)/u', $data['std_level'], $matc
         <span>เบอร์โทรศัพท์นักศึกษา</span>
         <div class="dotted"><?= htmlspecialchars($data['std_tel']) ?></div>
         <span>เบอร์โทรศัพท์ผู้ปกครอง</span>
-        <div class="dotted"><?= htmlspecialchars($data['parent_tel'] ?? '') ?></div>
+        <div class="dotted" style="flex-grow:0; width: 120px;"><?= htmlspecialchars($data['parent_tel'] ?? '') ?></div>
     </div>
 
     <div class="info-row">
