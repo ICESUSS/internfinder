@@ -1,6 +1,11 @@
 <?php
 session_start();
-include '../config.php';
+include __DIR__ . '/../config.php';
+include __DIR__ . '/../includes/mail_helper.php';
+
+/* ===== ตลอดชุดคำสั่ง (Base URL) ===== */
+$base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+$base_url .= preg_replace('/(\/admin\/).*/', '/', $_SERVER['SCRIPT_NAME']);
 
 /* ===== ตรวจสอบสิทธิ์ ===== */
 if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'admin') {
@@ -32,6 +37,191 @@ $std_have_intern = $conn->query("
 $company_total = $conn->query("
     SELECT COUNT(*) AS total FROM tb_company
 ")->fetch_assoc()['total'];
+
+/* ===== จัดการคำอนุมัติแบบกลุ่ม (Bulk Approval) ===== */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_approve'])) {
+    if (!empty($_POST['selected_ids'])) {
+        $selected_ids = array_map('intval', $_POST['selected_ids']);
+        $ids_str = implode(',', $selected_ids);
+        
+        // 1. อัปเดตสถานะเป็น approved สำหรับที่เลือกทั้งหมด
+        $conn->query("UPDATE tb_internship SET status = 'approved' WHERE intern_id IN ($ids_str)");
+        
+        // 2. ดึงข้อมูลและจัดกลุ่มตาม Position (Detail ID)
+        $sql_grouped = "SELECT i.*, s.std_name, s.std_lastname, c.com_name, c.com_email, d.job_title 
+                        FROM tb_internship i
+                        JOIN tb_student s ON i.std_id = s.std_id
+                        JOIN tb_company c ON i.com_id = c.com_id
+                        JOIN tb_company_detail d ON i.detail_id = d.detail_id
+                        WHERE i.intern_id IN ($ids_str)
+                        ORDER BY i.detail_id";
+        $res_grouped = $conn->query($sql_grouped);
+        
+        $groups = [];
+        while ($row = $res_grouped->fetch_assoc()) {
+            $groups[$row['detail_id']][] = $row;
+        }
+        
+        $total_sent = 0;
+        foreach ($groups as $detail_id => $students) {
+            $first = $students[0];
+            $to = $first['com_email'];
+            
+            if (!empty($to)) {
+                $subject = "แจ้งเตือน: มีนักศึกษา " . count($students) . " คน สนใจฝึกงาน (" . $first['job_title'] . ")";
+                $message = "เรียน " . $first['com_name'] . "\n\n";
+                $message .= "มีนักศึกษาสนใจสมัครงานในตำแหน่ง " . $first['job_title'] . " จำนวน " . count($students) . " คน ดังรายชื่อต่อไปนี้:\n\n";
+                
+                $attachments = [];
+                $upload_path = __DIR__ . '/../uploads/';
+                
+                foreach ($students as $index => $std) {
+                    $num = $index + 1;
+                    $message .= "$num. " . $std['std_name'] . " " . $std['std_lastname'] . "\n";
+                    if (!empty($std['note'])) {
+                        $message .= "   เหตุผล: " . $std['note'] . "\n";
+                    }
+                    $message .= "\n";
+                    
+                    // รวมไฟล์แนบ
+                    if (!empty($std['resume_file']) && file_exists($upload_path . $std['resume_file'])) {
+                        $attachments[] = $upload_path . $std['resume_file'];
+                    }
+                    if (!empty($std['transcript_file']) && file_exists($upload_path . $std['transcript_file'])) {
+                        $attachments[] = $upload_path . $std['transcript_file'];
+                    }
+                }
+                
+                $message .= "ผ่านระบบ Internfinder (ไฟล์ Resume และ Transcript แนบมาพร้อมเมลนี้)\n\n";
+                $message .= "ขอบคุณครับ\nInternfinder System";
+                
+                if (send_internship_mail($to, $subject, $message, $attachments)) {
+                    $id_list = implode(',', array_column($students, 'intern_id'));
+                    $conn->query("UPDATE tb_internship SET com_email_sent = 1 WHERE intern_id IN ($id_list)");
+                    $total_sent += count($students);
+                }
+            }
+        }
+        
+        $msg = "ดำเนินการอนุมัติแบบกลุ่มเรียบร้อยแล้ว (ส่งเมลสำเร็จ $total_sent ราย)";
+        $msg_type = "success";
+    } else {
+        $msg = "กรุณาเลือกรายการที่ต้องการอนุมัติ";
+        $msg_type = "error";
+    }
+}
+
+/* ===== จัดการคำอนุมัติจากหน้า Dashboard ===== */
+$msg = '';
+$msg_type = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $intern_id = 0;
+    $send_mail = false;
+    $is_send_only = false;
+
+    if (isset($_POST['approve_with_mail'])) {
+        $intern_id = (int)$_POST['approve_with_mail'];
+        $send_mail = true;
+    } elseif (isset($_POST['approve_only'])) {
+        $intern_id = (int)$_POST['approve_only'];
+        $send_mail = false;
+    } elseif (isset($_POST['send_mail_only'])) {
+        $intern_id = (int)$_POST['send_mail_only'];
+        $send_mail = true;
+        $is_send_only = true;
+    }
+
+    if ($intern_id > 0) {
+        $send_mail = $send_mail; 
+        
+        // อัปเดตสถานะ (ถ้าเป็นการกดปุ่มส่งเมลอย่างเดียว จะไม่อัปเดตสถานะอีกรอบ)
+        if (!$is_send_only) {
+            $stmt = $conn->prepare("UPDATE tb_internship SET status = 'approved' WHERE intern_id = ?");
+            $stmt->bind_param("i", $intern_id);
+            $stmt->execute();
+        }
+    
+    // ดึงข้อมูลเพื่อส่งเมลและแจ้งเตือน
+    $sql_info = "SELECT i.*, s.std_name, s.std_lastname, c.com_name, c.com_email, d.job_title, i.resume_file, i.transcript_file, i.note 
+                  FROM tb_internship i
+                 JOIN tb_student s ON i.std_id = s.std_id
+                 JOIN tb_company c ON i.com_id = c.com_id
+                 JOIN tb_company_detail d ON i.detail_id = d.detail_id
+                 WHERE i.intern_id = ?";
+    $stmt_info = $conn->prepare($sql_info);
+    $stmt_info->bind_param("i", $intern_id);
+    $stmt_info->execute();
+    $res = $stmt_info->get_result();
+    
+    if ($row = $res->fetch_assoc()) {
+        $mail_sent_msg = "";
+        $is_sent = 0;
+        
+        if ($send_mail) {
+            $to = $row['com_email'];
+            if (!empty($to)) {
+                $subject = "แจ้งเตือน: มีนักศึกษาสนใจฝึกงาน (" . $row['std_name'] . ")";
+                $message = "เรียน " . $row['com_name'] . "\n\n";
+                $message .= "มีนักศึกษาชื่อ " . $row['std_name'] . " " . $row['std_lastname'] . " สนใจสมัครงานในตำแหน่ง " . $row['job_title'] . "\n";
+                if (!empty($row['note'])) {
+                    $message .= "เหตุผลที่อยากฝึกงาน: " . $row['note'] . "\n";
+                }
+                $message .= "ผ่านระบบ Internfinder (ไฟล์ Resume และ Transcript แนบมาพร้อมเมลนี้)\n\n";
+                $message .= "ขอบคุณครับ\nInternfinder System";
+
+                // เตรียมไฟล์แนบ
+                $attachments = [];
+                $upload_path = __DIR__ . '/../uploads/';
+                if (!empty($row['resume_file']) && file_exists($upload_path . $row['resume_file'])) {
+                    $attachments[] = $upload_path . $row['resume_file'];
+                }
+                if (!empty($row['transcript_file']) && file_exists($upload_path . $row['transcript_file'])) {
+                    $attachments[] = $upload_path . $row['transcript_file'];
+                }
+
+                if (send_internship_mail($to, $subject, $message, $attachments)) {
+                    $mail_sent_msg = " และส่งอีเมลแจ้งสถานประกอบการแล้ว";
+                    $is_sent = 1;
+                } else {
+                    $mail_sent_msg = " (แต่ส่งอีเมลไม่สำเร็จ)";
+                }
+            } else {
+                $mail_sent_msg = " (ไม่พบอีเมลของสถานประกอบการ)";
+            }
+            
+            // อัปเดตสถานะการส่งอีเมล
+            if ($is_sent) {
+                $stmt_upd = $conn->prepare("UPDATE tb_internship SET com_email_sent = 1 WHERE intern_id = ?");
+                $stmt_upd->bind_param("i", $intern_id);
+                $stmt_upd->execute();
+            }
+        }
+        
+        // แจ้งเตือนนักศึกษา (ถ้ายังไม่ได้แจ้ง)
+        if (!$is_send_only) {
+            $stmt_notif = $conn->prepare("INSERT INTO tb_notifications (std_id, title, message) VALUES (?, ?, ?)");
+            $n_title = "อนุมัติฝึกงาน: " . $row['com_name'];
+            $n_msg = "คำขอฝึกงานของคุณได้รับการอนุมัติแล้ว";
+            $stmt_notif->bind_param("sss", $row['std_id'], $n_title, $n_msg);
+            $stmt_notif->execute();
+        }
+    }
+    $msg = ($is_send_only ? "ดำเนินการส่งเมลเรียบร้อยแล้ว" : "อนุมัติเรียบร้อยแล้ว") . $mail_sent_msg;
+    $msg_type = "success";
+    }
+}
+
+/* ===== ดึงคำร้องที่รอการอนุมัติ หรือ อนุมัติแล้วแต่ยังไม่ได้ส่งเมล ===== */
+$pending_requests = $conn->query("
+    SELECT i.*, s.std_name, s.std_lastname, c.com_name, d.job_title 
+    FROM tb_internship i
+    JOIN tb_student s ON i.std_id = s.std_id
+    JOIN tb_company c ON i.com_id = c.com_id
+    JOIN tb_company_detail d ON i.detail_id = d.detail_id
+    WHERE i.status = 'pending' 
+       OR (i.status = 'approved' AND i.com_email_sent = 0)
+    ORDER BY i.status DESC, i.intern_id DESC
+");
 ?>
 
 <!DOCTYPE html>
@@ -39,7 +229,7 @@ $company_total = $conn->query("
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | InternFinder</title>
+    <title>แผงควบคุมแอดมิน | InternFinder</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,455 +242,265 @@ $company_total = $conn->query("
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        :root {
-            --primary: #4F46E5;
-            --primary-hover: #4338CA;
-            --secondary: #64748B;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --bg-main: #F8FAFC;
-            --bg-card: #FFFFFF;
-            --text-main: #1E293B;
-            --text-muted: #64748B;
-            --border: #E2E8F0;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', 'Sarabun', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            line-height: 1.5;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        /* ===== Header ===== */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-        }
-
-        header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-
-        .btn-logout {
-            background-color: #fee2e2;
-            color: var(--danger);
-        }
-
-        .btn-logout:hover {
-            background-color: var(--danger);
-            color: white;
-        }
-
-        /* ===== Stats Grid ===== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            margin-bottom: 40px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow);
-        }
-
-        .stat-card i {
-            font-size: 24px;
-            padding: 12px;
-            border-radius: 12px;
-            background: #F1F5F9;
-            color: var(--primary);
-            margin-bottom: 16px;
-        }
-
-        .stat-card.students i { background: #EEF2FF; color: var(--primary); }
-        .stat-card.pending i { background: #FFF7ED; color: var(--warning); }
-        .stat-card.approved i { background: #ECFDF5; color: var(--success); }
-        .stat-card.company i { background: #F8FAFC; color: var(--secondary); }
-
-        .stat-card p {
-            color: var(--text-muted);
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .stat-card h2 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-top: 4px;
-        }
-
-        /* ===== Dashboard Layout ===== */
-        .dashboard-content {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 32px;
-        }
-
-        /* ===== Actions Section ===== */
-        .actions-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-        }
-
-        .action-card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .action-header h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .action-card p {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        .btn-action {
-            background-color: var(--primary);
-            color: white;
-            justify-content: center;
-        }
-
-        .btn-action:hover {
-            background-color: var(--primary-hover);
-        }
-
-        /* ===== Chart Section ===== */
-        .chart-card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            text-align: center;
-        }
-
-        .chart-card h3 {
-            font-size: 18px;
-            margin-bottom: 24px;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 250px;
-            margin: 0 auto;
-        }
-
-        /* Responsive Mobile */
-        @media (max-width: 1024px) {
-            .dashboard-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px 15px;
-            }
-
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-                margin-bottom: 30px;
-            }
-
-            header h1 {
-                font-size: 20px;
-            }
-
-            .header-actions {
-                width: 100%;
-            }
-
-            .btn-logout {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-                gap: 15px;
-                margin-bottom: 30px;
-            }
-
-            .stat-card {
-                padding: 16px;
-            }
-
-            .stat-card h2 {
-                font-size: 24px;
-            }
-
-            .actions-section {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .chart-container {
-                height: 200px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stat-card {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                text-align: left;
-            }
-
-            .stat-card i {
-                margin-bottom: 0;
-            }
-
-            .stat-card h2 {
-                margin-top: 0;
-                font-size: 20px;
-            }
-        }
-    </style>
-    <link rel="stylesheet" href="../assets/css/mobile-responsive.css">
+    <!-- Shared Admin Styles -->
+    <link rel="stylesheet" href="<?= $base_url ?>admin/assets/css/admin-style.css">
 </head>
-
 <body>
 
-<div class="container">
-    <header>
-        <h1><i class="fas fa-chart-pie"></i> แผงควบคุมระบบ</h1>
-        <div class="header-actions">
-            <a class="btn btn-logout" href="../logout.php" onclick="return confirm('ออกจากระบบ?')">
-                <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
-            </a>
+    <!-- MOBILE HEADER -->
+    <div class="mobile-header">
+        <div style="display: flex; align-items: center; gap: 10px; font-weight: 700;">
+            <i class="fas fa-graduation-cap text-primary"></i>
+            <span>InternFinder</span>
         </div>
-    </header>
-
-    <!-- ===== STATS ===== -->
-    <div class="stats-grid">
-        <div class="stat-card students">
-            <i class="fas fa-user-graduate"></i>
-            <p>นักศึกษาทั้งหมด</p>
-            <h2><?= number_format($std_all) ?></h2>
-        </div>
-
-        <div class="stat-card pending">
-            <i class="fas fa-user-clock"></i>
-            <p>ยังไม่มีที่ฝึกงาน</p>
-            <h2><?= number_format($std_no_intern) ?></h2>
-        </div>
-
-        <div class="stat-card approved">
-            <i class="fas fa-user-check"></i>
-            <p>มีที่ฝึกงานแล้ว</p>
-            <h2><?= number_format($std_have_intern) ?></h2>
-        </div>
-
-        <div class="stat-card company">
-            <i class="fas fa-building"></i>
-            <p>สถานประกอบการ</p>
-            <h2><?= number_format($company_total) ?></h2>
-        </div>
+        <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
     </div>
 
-    <div class="dashboard-content">
-        <!-- ===== MAIN ACTIONS ===== -->
-        <div class="actions-section">
-            <div class="action-card">
-                <div class="action-header">
-                    <h3><i class="fas fa-users-cog"></i> จัดการนักศึกษา</h3>
-                    <p>จัดการข้อมูลพื้นฐาน เพิ่ม ลบ แก้ไข ข้อมูลนักศึกษาในระบบ</p>
-                </div>
-                <a href="Student/student_list.php" class="btn btn-action">ดูรายชื่อนักศึกษา</a>
-            </div>
+    <!-- SIDEBAR -->
+    <?php include 'includes/sidebar.php'; ?>
 
-            <div class="action-card">
-                <div class="action-header">
-                    <h3><i class="fas fa-file-signature"></i> คำร้องขอฝึกงาน</h3>
-                    <p>พิจารณาอนุมัติหรือปฏิเสธคำร้องขอฝึกงานจากนักศึกษา</p>
-                </div>
-                <a href="internship_requests.php" class="btn btn-action" style="background:#f43f5e">ตรวจสอบคำร้อง</a>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <?php if ($msg): ?>
+            <div style="padding:15px; background:<?= $msg_type=='success'?'#dcfce7':'#fee2e2' ?>; color:<?= $msg_type=='success'?'#166534':'#991b1b' ?>; border-radius:15px; margin-bottom:24px; font-size:14px; box-shadow: var(--shadow-sm); border: 1px solid <?= $msg_type=='success'?'#bbf7d0':'#fecaca' ?>;">
+                <i class="fas <?= $msg_type=='success'?'fa-check-circle':'fa-exclamation-circle' ?> me-2"></i> <?= $msg ?>
+                <?php if (isset($_SESSION['mail_error'])): ?>
+                    <div style="font-size: 11px; margin-top: 10px; color: #991b1b; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; border: 1px dashed rgba(255,0,0,0.1);">
+                        <strong>Debug:</strong> <?= htmlspecialchars($_SESSION['mail_error']) ?>
+                    </div>
+                    <?php unset($_SESSION['mail_error']); ?>
+                <?php endif; ?>
             </div>
+        <?php endif; ?>
 
-            <div class="action-card">
-                <div class="action-header">
-                    <h3><i class="fas fa-city"></i> สถานประกอบการ</h3>
-                    <p>จัดการข้อมูลและรายชื่อบริษัทที่ร่วมโครงการฝึกงาน</p>
-                </div>
-                <a href="Com/company_list.php" class="btn btn-action">จัดการข้อมูลบริษัท</a>
+        <div class="top-bar">
+            <div class="welcome-text">
+                <h1>ยินดีต้อนรับ, แอดมิน 👋</h1>
+                <p>รายงานภาพรวมระบบ InternFinder วันนี้</p>
             </div>
-
-            <div class="action-card">
-                <div class="action-header">
-                    <h3><i class="fas fa-bug"></i> รายงานปัญหา</h3>
-                    <p>ดูประวัติการแจ้งปัญหาการใช้งานจากนักศึกษาและระบบ</p>
-                </div>
-                <a href="../admin/report.php" class="btn btn-action" style="background:#64748b">ดูรายงานทั้งหมด</a>
+            <div class="header-tools">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">
+                    <i class="far fa-calendar-alt me-1"></i> <?= date('d M Y') ?>
+                </span>
             </div>
         </div>
 
-        <!-- ===== VISUALIZATION ===== -->
-        <div class="chart-card">
-            <h3>📊 อัตราการฝึกงาน</h3>
-            <div class="chart-container">
-                <canvas id="internshipChart"></canvas>
+        <!-- STATS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #EEF2FF; color: #4F46E5;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-info">
+                    <p>นักศึกษาทั้งหมด</p>
+                    <h2><?= number_format($std_all) ?></h2>
+                </div>
             </div>
-            <div style="margin-top: 20px; font-size: 14px; color: var(--text-muted);">
-                ภาพรวมสถานะนักศึกษา ณ ปัจจุบัน
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #FFF7ED; color: #F59E0B;">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="stat-info">
+                    <p>รอที่ฝึกงาน</p>
+                    <h2><?= number_format($std_no_intern) ?></h2>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #ECFDF5; color: #10B981;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <p>ฝึกงานแล้ว</p>
+                    <h2><?= number_format($std_have_intern) ?></h2>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #F8FAFC; color: #64748B;">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="stat-info">
+                    <p>บริษัท</p>
+                    <h2><?= number_format($company_total) ?></h2>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<script>
-    const ctx = document.getElementById('internshipChart').getContext('2d');
-    
-    // Custom Plugin for Center Text
-    const centerTextPlugin = {
-        id: 'centerText',
-        afterDraw: (chart) => {
-            if (chart.config.type !== 'doughnut') return;
-            const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
-            ctx.save();
-            const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            const haveIntern = chart.data.datasets[0].data[1];
-            const percentage = total > 0 ? Math.round((haveIntern / total) * 100) : 0;
+        <div class="dashboard-grid">
+            <!-- PENDING TABLE -->
+            <div class="card" style="margin-bottom: 0;">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-clock text-warning"></i> คำร้องที่รอดำเนินการ</h3>
+                    <a href="internship_requests.php" class="btn" style="color: var(--primary);">ดูทั้งหมด <i class="fas fa-chevron-right"></i></a>
+                </div>
 
-            ctx.font = 'bold 30px Inter';
-            ctx.fillStyle = '#1E293B';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(`${percentage}%`, left + width / 2, top + height / 2 - 5);
-            
-            ctx.font = '500 12px Inter';
-            ctx.fillStyle = '#64748B';
-            ctx.fillText('สำเร็จ', left + width / 2, top + height / 2 + 20);
-            ctx.restore();
+                <?php if ($pending_requests->num_rows === 0): ?>
+                    <div style="text-align: center; padding: 60px; color: var(--text-muted);">
+                        <i class="fas fa-check-double" style="font-size: 40px; margin-bottom: 16px; opacity: 0.2;"></i>
+                        <p>จัดการคำร้องทั้งหมดครบถ้วนแล้ว</p>
+                    </div>
+                <?php else: ?>
+                    <form method="POST" id="bulkForm">
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40px; text-align: center;">
+                                            <input type="checkbox" id="selectAll" onclick="toggleAll(this)" style="cursor: pointer;">
+                                        </th>
+                                        <th style="width: 200px;">นักศึกษา</th>
+                                        <th>สถานประกอบการ / ตำแหน่ง</th>
+                                        <th style="text-align: center;">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php while($row = $pending_requests->fetch_assoc()): ?>
+                                        <tr>
+                                            <td style="text-align: center;" data-label="เลือก">
+                                                <input type="checkbox" name="selected_ids[]" value="<?= $row['intern_id'] ?>" class="item-checkbox">
+                                            </td>
+                                            <td data-label="นักศึกษา">
+                                                <div style="font-weight: 700; font-size: 14px;"><?= htmlspecialchars($row['std_name'] . ' ' . $row['std_lastname']) ?></div>
+                                                <div style="font-size: 11px; margin-top: 3px;">
+                                                    <?php if ($row['status'] == 'pending'): ?>
+                                                        <span style="color: #D97706; background: #FFFBEB; padding: 2px 6px; border-radius: 4px;">รออนุมัติ</span>
+                                                    <?php else: ?>
+                                                        <span style="color: #059669; background: #ECFDF5; padding: 2px 6px; border-radius: 4px;">อนุมัติแล้ว (รอเมล)</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                            <td data-label="สถานประกอบการ / ตำแหน่ง">
+                                                <div style="font-size: 13px; font-weight: 600;"><?= htmlspecialchars($row['com_name']) ?></div>
+                                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"><?= htmlspecialchars($row['job_title']) ?></div>
+                                                <?php if (!empty($row['com_email'])): ?>
+                                                    <div style="font-size: 11px; color: var(--primary); font-weight: 500; margin-top: 4px;">
+                                                        <i class="far fa-envelope"></i> <?= htmlspecialchars($row['com_email']) ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div style="font-size: 11px; color: var(--danger); font-weight: 500; margin-top: 4px;">
+                                                        <i class="fas fa-exclamation-circle"></i> ไม่มีอีเมล
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td data-label="จัดการ">
+                                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                                    <?php if ($row['status'] == 'pending'): ?>
+                                                        <button type="submit" name="approve_with_mail" value="<?= $row['intern_id'] ?>" class="btn btn-primary" title="อนุมัติและส่งเมล" onclick="return confirm('อนุมัติและส่งอีเมลแจ้งบริษัท?')">
+                                                            <i class="fas fa-paper-plane"></i>
+                                                        </button>
+                                                        <button type="submit" name="approve_only" value="<?= $row['intern_id'] ?>" class="btn btn-secondary" title="อนุมัติเท่านั้น" onclick="return confirm('อนุมัติโดยไม่ส่งอีเมล?')">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <button type="submit" name="send_mail_only" value="<?= $row['intern_id'] ?>" class="btn btn-indigo" title="ส่งอีเมลแจ้งบริษัท" onclick="return confirm('ส่งอีเมลแจ้งสถานประกอบการ?')">
+                                                            <i class="fas fa-envelope"></i> แจ้งบริษัท
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                            <button type="submit" name="bulk_approve" class="btn" style="background: var(--bg-sidebar); color: white; padding: 10px 20px;" onclick="return confirm('อนุมัติและส่งเมลแบบกลุ่มสำหรับบริษัทที่เลือก?')">
+                                <i class="fas fa-check-double"></i> อนุมัติและส่งเมลแบบกลุ่ม
+                            </button>
+                        </div>
+                    </form>
+                <?php endif; ?>
+            </div>
+
+            <!-- CHART & QUICK -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📊 ความคืบหน้า</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="internshipChart"></canvas>
+                    </div>
+                    <div style="margin-top: 24px; font-size: 13px; text-align: center; color: var(--text-muted); line-height: 1.6;">
+                        เป้าหมายปีนี้: นักศึกษาทุกคนมีที่ฝึกงาน<br>
+                        <span style="font-weight: 600; color: var(--success); text-decoration: underline;">เข้าใกล้เป้าหมาย 100% แล้ว</span>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:0; background: linear-gradient(135deg, #4F46E5 0%, #312E81 100%); color: white; border: none;">
+                    <h3 style="font-size: 16px; margin-bottom: 8px;">ศูนย์ช่วยเหลือแอดมิน</h3>
+                    <p style="font-size: 12px; opacity: 0.8; margin-bottom: 20px;">หากพบปัญหาการใช้งานระบบหรือต้องการความช่วยเหลือเร่งด่วน</p>
+                    <a href="#" class="btn" style="background: rgba(255,255,255,0.2); color: white; width: 100%; justify-content: center; backdrop-filter: blur(5px);">
+                        <i class="fas fa-headset"></i> ติดต่อฝ่ายไอที
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleAll(source) {
+            const checkboxes = document.getElementsByClassName('item-checkbox');
+            for(let i=0; i<checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
         }
-    };
 
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['ยังไม่มีที่ฝึกงาน', 'มีที่ฝึกงานแล้ว'],
-            datasets: [{
-                data: [<?= $std_no_intern ?>, <?= $std_have_intern ?>],
-                backgroundColor: [
-                    'rgba(239, 68, 68, 0.8)', // Modern Red
-                    'rgba(16, 185, 129, 0.8)'  // Modern Green
-                ],
-                hoverBackgroundColor: [
-                    '#EF4444',
-                    '#10B981'
-                ],
-                borderWidth: 0,
-                borderRadius: 5,
-                spacing: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '75%',
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20,
-                        font: {
-                            family: 'Inter',
-                            size: 12
-                        }
+        // CHART
+        const ctx = document.getElementById('internshipChart').getContext('2d');
+        const centerTextPlugin = {
+            id: 'centerText',
+            afterDraw: (chart) => {
+                if (chart.config.type !== 'doughnut') return;
+                const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+                ctx.save();
+                const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                const haveIntern = chart.data.datasets[0].data[1];
+                const percentage = total > 0 ? Math.round((haveIntern / total) * 100) : 0;
+
+                ctx.font = 'bold 32px Inter';
+                ctx.fillStyle = '#1E293B';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${percentage}%`, left + width / 2, top + height / 2 - 8);
+                
+                ctx.font = '600 11px Inter';
+                ctx.fillStyle = '#64748B';
+                ctx.fillText('สถิติล่าสุด', left + width / 2, top + height / 2 + 22);
+                ctx.restore();
+            }
+        };
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['ยังไม่มีที่ฝึกงาน', 'มีที่ฝึกงานแล้ว'],
+                datasets: [{
+                    data: [<?= $std_no_intern ?>, <?= $std_have_intern ?>],
+                    backgroundColor: ['#FCA5A5', '#34D399'],
+                    hoverBackgroundColor: ['#EF4444', '#10B981'],
+                    borderWidth: 0,
+                    borderRadius: 10,
+                    spacing: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '80%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#1E293B',
+                        padding: 12,
+                        cornerRadius: 10,
+                        titleFont: { family: 'Inter', size: 13 },
+                        bodyFont: { family: 'Inter', size: 12 }
                     }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                    titleFont: { size: 14, family: 'Inter' },
-                    bodyFont: { size: 13, family: 'Inter' },
-                    padding: 12,
-                    cornerRadius: 8,
-                    displayColors: false
                 }
             },
-            animation: {
-                animateScale: true,
-                animateRotate: true
-            }
-        },
-        plugins: [centerTextPlugin]
-    });
-</script>
-
+            plugins: [centerTextPlugin]
+        });
+    </script>
 </body>
 </html>

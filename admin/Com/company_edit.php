@@ -24,6 +24,7 @@ if (!$company) {
         'com_id' => 0,
         'com_name' => '',
         'com_tel' => '',
+        'com_email' => '',
         'com_contact' => '',
         'com_contact_pos' => '',
         'com_detail' => '',
@@ -99,6 +100,10 @@ if (!$company) {
                 <div class="form-group">
                     <label>เบอร์โทรศัพท์ติดต่อ</label>
                     <input type="text" name="com_tel" value="<?= htmlspecialchars($company['com_tel']) ?>">
+                </div>
+                <div class="form-group">
+                    <label>อีเมล (สำหรับส่งแจ้งเตือน)</label>
+                    <input type="email" name="com_email" value="<?= htmlspecialchars($company['com_email'] ?? '') ?>" placeholder="example@company.com">
                 </div>
                 <div class="form-group">
                     <label>ชื่อผู้ประสานงาน</label>

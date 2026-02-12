@@ -11,6 +11,7 @@ if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'admin') {
 $com_id         = (int)$_POST['com_id'];
 $com_name       = $_POST['com_name'] ?? '';
 $com_tel        = $_POST['com_tel'] ?? '';
+$com_email      = $_POST['com_email'] ?? '';
 $com_contact    = $_POST['com_contact'] ?? '';
 $com_contact_pos = $_POST['com_contact_pos'] ?? '';
 $com_add_no     = $_POST['com_add_no'] ?? '';
@@ -23,13 +24,17 @@ $com_detail     = $_POST['com_detail'] ?? '';
 
 if ($com_id > 0) {
     // Update
-    $stmt = $conn->prepare("UPDATE tb_company SET com_name=?, com_tel=?, com_contact=?, com_contact_pos=?, com_add_no=?, com_road=?, com_subdistrict=?, com_district=?, com_province=?, com_zipcode=?, com_detail=? WHERE com_id=?");
-    $stmt->bind_param("sssssssssssi", $com_name, $com_tel, $com_contact, $com_contact_pos, $com_add_no, $com_road, $com_subdistrict, $com_district, $com_province, $com_zipcode, $com_detail, $com_id);
+    $sql = "UPDATE tb_company SET com_name=?, com_tel=?, com_email=?, com_contact=?, com_contact_pos=?, com_add_no=?, com_road=?, com_subdistrict=?, com_district=?, com_province=?, com_zipcode=?, com_detail=? WHERE com_id=?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) die("Prepare failed (Update): " . $conn->error . " | SQL: " . $sql);
+    $stmt->bind_param("ssssssssssssi", $com_name, $com_tel, $com_email, $com_contact, $com_contact_pos, $com_add_no, $com_road, $com_subdistrict, $com_district, $com_province, $com_zipcode, $com_detail, $com_id);
     $stmt->execute();
 } else {
     // Insert
-    $stmt = $conn->prepare("INSERT INTO tb_company (com_name, com_tel, com_contact, com_contact_pos, com_add_no, com_road, com_subdistrict, com_district, com_province, com_zipcode, com_detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssssssss", $com_name, $com_tel, $com_contact, $com_contact_pos, $com_add_no, $com_road, $com_subdistrict, $com_district, $com_province, $com_zipcode, $com_detail);
+    $sql = "INSERT INTO tb_company (com_name, com_tel, com_email, com_contact, com_contact_pos, com_add_no, com_road, com_subdistrict, com_district, com_province, com_zipcode, com_detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) die("Prepare failed (Insert): " . $conn->error . " | SQL: " . $sql);
+    $stmt->bind_param("ssssssssssss", $com_name, $com_tel, $com_email, $com_contact, $com_contact_pos, $com_add_no, $com_road, $com_subdistrict, $com_district, $com_province, $com_zipcode, $com_detail);
     $stmt->execute();
     $com_id = $conn->insert_id;
 }
