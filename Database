@@ -1,0 +1,1776 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Sep 12, 2026 at 03:30 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.0.30
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `db_internfider`
+--
+CREATE DATABASE IF NOT EXISTS `db_internfider` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+USE `db_internfider`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_admin`
+--
+
+CREATE TABLE `tb_admin` (
+  `ad_id` varchar(11) NOT NULL COMMENT 'รหัสแอดมิน',
+  `ad_password` varchar(255) NOT NULL COMMENT 'รหัสผ่าน (ควรเข้ารหัส)',
+  `ad_name` varchar(100) NOT NULL COMMENT 'ชื่อ-นามสกุล',
+  `ad_gmail` varchar(255) NOT NULL COMMENT 'อีเมล Gmail',
+  `ad_tel` varchar(10) DEFAULT NULL COMMENT 'เบอร์โทรศัพท์',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'วันที่สร้าง',
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT 'วันที่อัพเดท'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tb_admin`
+--
+
+INSERT INTO `tb_admin` (`ad_id`, `ad_password`, `ad_name`, `ad_gmail`, `ad_tel`, `created_at`, `updated_at`) VALUES
+('01', '$2y$10$Pta8PXEwOtjdAAXl7/ZJd.IOajdj8GGvACadgHSuDIjSYE7lZXd.C', '', '', NULL, '2026-09-12 13:19:24', '2026-09-12 13:23:52'),
+('67319010002', '$2y$10$GAKTiBRKWQHbuwi3XL.Td.sJA.hBilho1Ej55p.HOSkSZVdB7MvWK', 'นาย อมรเทพ ยอดยา', '67319010002@stc.ac.th', '0644544585', '2025-12-14 06:50:07', '2026-01-22 18:17:18');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_branch`
+--
+
+CREATE TABLE `tb_branch` (
+  `branch_id` int(11) NOT NULL,
+  `branch_name` varchar(100) NOT NULL,
+  `dep_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_company`
+--
+
+CREATE TABLE `tb_company` (
+  `com_id` int(11) NOT NULL,
+  `com_name` varchar(255) NOT NULL,
+  `com_add_no` varchar(50) DEFAULT NULL,
+  `com_road` varchar(100) DEFAULT NULL,
+  `com_subdistrict` varchar(100) DEFAULT NULL,
+  `com_district` varchar(100) DEFAULT NULL,
+  `com_province` varchar(100) DEFAULT NULL,
+  `com_zipcode` varchar(10) DEFAULT NULL,
+  `com_tel` varchar(20) DEFAULT NULL,
+  `com_email` varchar(255) DEFAULT NULL,
+  `com_contact` varchar(255) DEFAULT NULL,
+  `com_contact_pos` varchar(100) DEFAULT NULL,
+  `com_detail` varchar(1000) NOT NULL,
+  `com_created` datetime DEFAULT current_timestamp(),
+  `com_img` varchar(255) DEFAULT NULL,
+  `dep_id` int(25) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- Dumping data for table `tb_company`
+--
+
+INSERT INTO `tb_company` (`com_id`, `com_name`, `com_add_no`, `com_road`, `com_subdistrict`, `com_district`, `com_province`, `com_zipcode`, `com_tel`, `com_email`, `com_contact`, `com_contact_pos`, `com_detail`, `com_created`, `com_img`, `dep_id`) VALUES
+(20, 'บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด', '28', '-', 'หัวโพธิ์', 'สองพี่น้อง', 'สุพรรณ', '0000', '021234567', 'phanuwatphromwongsa@gmail.com', 'HR (Cyber Defense)', 'HR', '', '2025-12-29 15:27:37', 'company_1.jpg', NULL),
+(23, 'บริษัท ไอทีเน็ตเวิร์ค แอนด์ ซีเคียวริตี้', '88', '-', 'ต.คลองหนึ่ง', 'อ.คลองหลวง ', ' ปทุมธานี', '12120', '029998888', 'phanuwatphromwongsa@gmail.com', 'ฝ่ายบุคคล', 'HR', '', '2025-12-29 15:27:37', 'company_4.jpg', NULL),
+(35, 'บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด 1', '28', '-', 'หัวโพธิ์', 'สองพี่น้อง', 'สุพรรณ', '0000', '0925040546', '67319010012@stc.ac.th', 'คุณ ก้อง', 'HR', '0', '2026-01-28 09:49:33', 'company_35.png', NULL),
+(36, 'ศิวกร กรุ๊ป', '28', '-', 'หัวโพธิ์', 'สองพี่น้อง', 'สุพรรณ', '0000', '0925040546', 'siwakron030830@gmail.com', 'คุณ ก้อง', 'HR', '', '2026-01-31 13:08:48', 'company_36.png', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_company_detail`
+--
+
+CREATE TABLE `tb_company_detail` (
+  `detail_id` int(11) NOT NULL,
+  `com_id` int(11) NOT NULL COMMENT 'อ้างอิงบริษัท',
+  `job_title` varchar(255) NOT NULL COMMENT 'ตำแหน่งฝึกงาน',
+  `job_type` varchar(100) DEFAULT NULL COMMENT 'ประเภทงาน เช่น IT / Cyber',
+  `job_description` text DEFAULT NULL COMMENT 'รายละเอียดงาน',
+  `job_qualification` text DEFAULT NULL COMMENT 'คุณสมบัติผู้สมัคร',
+  `job_welfare` text DEFAULT NULL COMMENT 'สวัสดิการ',
+  `allowance` varchar(100) DEFAULT NULL COMMENT 'เบี้ยเลี้ยง',
+  `work_time` varchar(100) DEFAULT NULL COMMENT 'เวลาทำงาน',
+  `work_day` varchar(100) DEFAULT NULL COMMENT 'วันทำงาน',
+  `job_capacity` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tb_company_detail`
+--
+
+INSERT INTO `tb_company_detail` (`detail_id`, `com_id`, `job_title`, `job_type`, `job_description`, `job_qualification`, `job_welfare`, `allowance`, `work_time`, `work_day`, `job_capacity`, `created_at`) VALUES
+(32, 20, 'Test Job 07:08:20', 'Test', 'Test Desc', 'Test Qual', 'Test Welfare', 'Test Allowance', '08:00 - 17:00', 'Mon-Fri', 10, '2026-01-22 06:08:20'),
+(33, 20, 'ีำะั่้พะ้พ', 'ะพ้พะ้', '', '', '', '651', '้พ้พพะ้', 'ะ้สะพ้วส', 5, '2026-01-22 06:10:17'),
+(34, 35, 'โปรแกรมเมอร์', 'full-time', '-', '', '', '400', '09:00-16:00', 'จันทร์-ศุกร์', 1, '2026-01-28 02:50:27'),
+(35, 35, 'software dev', 'defwerf', 'junulj', 'jnlk', 'ค่ารักาาพยาบาล และที่พัก', '400', '09:00-16:00', 'จันทร์-ศุกร์', 5, '2026-01-29 05:46:19'),
+(36, 36, 'software dev', 'defwerf', '', '', 'ค่ารักาาพยาบาล และที่พัก', '400', '09:00-16:00', 'จันทร์-ศุกร์', 1, '2026-01-31 06:09:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_department`
+--
+
+CREATE TABLE `tb_department` (
+  `dep_id` int(25) NOT NULL,
+  `dep_name` varchar(50) DEFAULT NULL,
+  `dep_group` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- Dumping data for table `tb_department`
+--
+
+INSERT INTO `tb_department` (`dep_id`, `dep_name`, `dep_group`) VALUES
+(1, 'สาขางานอิเล็กทรอนิกส์', 'อิเล็กทรอนิกส์'),
+(2, 'ไฟฟ้ากำลัง', 'ไฟฟ้ากำลัง'),
+(3, 'ยานยนต์ไฟฟ้า', 'ยานยนต์'),
+(7, 'สาขางานเทคโนโลยีคอมพิวเตอร์', 'อิเล็กทรอนิกส์'),
+(8, 'สาขางานเทคโนโลยีสารสนเทศ', 'อิเล็กทรอนิกส์');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_internship`
+--
+
+CREATE TABLE `tb_internship` (
+  `intern_id` int(11) NOT NULL,
+  `std_id` varchar(11) NOT NULL,
+  `com_id` int(11) NOT NULL,
+  `detail_id` int(11) DEFAULT NULL,
+  `parent_tel` varchar(20) DEFAULT NULL,
+  `parent_name` varchar(255) DEFAULT NULL,
+  `parent_relation` varchar(100) DEFAULT NULL,
+  `parent_id_card` varchar(20) DEFAULT NULL,
+  `parent_address` text DEFAULT NULL,
+  `gpax` varchar(10) DEFAULT NULL,
+  `request_type` enum('1','2') DEFAULT '2',
+  `contact_name` varchar(100) DEFAULT NULL,
+  `term` varchar(50) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `com_email_sent` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `resume_file` varchar(255) DEFAULT NULL COMMENT 'เก็บชื่อไฟล์ Resume',
+  `transcript_file` varchar(255) DEFAULT NULL COMMENT 'เก็บชื่อไฟล์ Transcript',
+  `note` text DEFAULT NULL COMMENT 'ข้อความถึงผู้ประกอบการ'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- Dumping data for table `tb_internship`
+--
+
+INSERT INTO `tb_internship` (`intern_id`, `std_id`, `com_id`, `detail_id`, `parent_tel`, `parent_name`, `parent_relation`, `parent_id_card`, `parent_address`, `gpax`, `request_type`, `contact_name`, `term`, `start_date`, `end_date`, `status`, `com_email_sent`, `created_at`, `resume_file`, `transcript_file`, `note`) VALUES
+(7, '67319010012', 20, 32, 'sacavsdvsd', 'dsvdsv555', 'sdvdsv', 'dvsd', 'vsvsdvกดเกดเ', '3.55', '2', '', '2/2569', '1999-09-02', '1999-02-08', 'approved', 1, '2026-01-22 06:35:51', 'resume_67319010012_1769063751.pdf', 'trans_67319010012_1769063751.pdf', ''),
+(10, '67319010014', 20, 32, '0989135892', 'อภิสิทธ์ จริงใจ', 'บิดดา', '1729800343964', '38 หมู่8 ต.หัวโพธิ์ อ.สองพี่น้อง จ.สุพรรณบุรี 72110', '3.20', '2', '', '2/2569', '2026-09-02', '2026-09-08', 'approved', 1, '2026-01-28 02:44:24', 'resume_67319010014_1769568313.pdf', 'trans_67319010014_1769568313.pdf', ''),
+(11, '67319010001', 35, 34, '0989135892', 'อภิสิทธ์ จริงใจ', 'บิดดา', '1729800343964', '-', '3.20', '2', '', '2/2569', '2026-09-02', '2026-09-08', 'approved', 1, '2026-01-28 02:51:38', 'resume_67319010001_1769568698.pdf', 'trans_67319010001_1769568698.pdf', 'เพราะผมมีความชำนาญ'),
+(12, '67319010012', 35, 35, 'hbkj', 'bi', 'n jk', 'hbk', 'hbk', '3.55', '2', '', '2/2569', '2026-01-16', '2026-02-08', 'approved', 1, '2026-01-29 05:47:55', 'resume_67319010012_1769667360.pdf', 'trans_67319010012_1769667360.pdf', ''),
+(13, '67319010012', 36, 36, '0925040546', 'bi', 'n jk', '1729800343964', 'eefjnkwejf', '3.55', '2', '', '2/2569', '2025-12-05', '2026-01-11', 'approved', 1, '2026-01-31 06:11:17', 'resume_67319010012_1769839877.pdf', 'trans_67319010012_1769839877.pdf', ''),
+(14, '01', 35, 35, '0989135892', 'อภิสิทธ์ จริงใจ', 'บิดดา', 'อำพอพอ', 'ำพัำะ้', '3.20', '2', '', '2/2569', '1999-06-09', '2000-12-01', 'approved', 1, '2026-09-12 13:25:38', 'resume_01_1789219538.pdf', 'trans_01_1789219538.pdf', 'พะำเพ');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_notifications`
+--
+
+CREATE TABLE `tb_notifications` (
+  `id` int(11) NOT NULL,
+  `std_id` varchar(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- Dumping data for table `tb_notifications`
+--
+
+INSERT INTO `tb_notifications` (`id`, `std_id`, `title`, `message`, `is_read`, `created_at`) VALUES
+(1, '67319010002', 'คำขอฝึกงานได้รับการอนุมัติ', 'คำขอฝึกงานของคุณที่ บริษัท คลาวด์ ซิสเต็มส์ (ประเทศไทย) จำกัด สถานะ: อนุมัติแล้ว', 1, '2026-01-14 12:29:32'),
+(2, '67319010012', 'คำขอฝึกงานได้รับการอนุมัติ', 'คำขอฝึกงานของคุณที่ บริษัท คลาวด์ ซิสเต็มส์ (ประเทศไทย) จำกัด สถานะ: อนุมัติแล้ว', 1, '2026-01-14 20:15:44'),
+(3, '67319010012', 'คำขอฝึกงานได้รับการอนุมัติ', 'คำขอฝึกงานของคุณที่ บริษัท คลาวด์ ซิสเต็มส์ (ประเทศไทย) จำกัด สถานะ: อนุมัติแล้ว', 1, '2026-01-15 08:45:12'),
+(4, '63000001', 'คำขอฝึกงานได้รับการอนุมัติ', 'คำขอฝึกงานของคุณที่ บริษัท คลาวด์ ซิสเต็มส์ (ประเทศไทย) จำกัด สถานะ: อนุมัติแล้ว', 1, '2026-01-21 22:09:15'),
+(5, '63000001', 'แอดมินอนุมัติคำขอฝึกงานแล้ว', 'คำขอฝึกงานของคุณที่ บริษัท คลาวด์ ซิสเต็มส์ (ประเทศไทย) จำกัด สถานะ: อนุมัติโดยแอดมินเรียบร้อยแล้ว', 1, '2026-01-21 22:13:15'),
+(6, '67319010012', 'อนุมัติฝึกงาน: บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด', 'คำขอฝึกงานของคุณที่ บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด ได้รับการอนุมัติโดยแอดมินแล้ว', 1, '2026-01-22 13:36:37'),
+(7, '67319010012', 'อนุมัติฝึกงาน: บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด', 'คำขอฝึกงานของคุณที่ บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด ได้รับการอนุมัติโดยแอดมินแล้ว', 1, '2026-01-22 13:40:37'),
+(8, '67319010002', 'อนุมัติฝึกงาน: บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด', 'คำขอฝึกงานของคุณที่ บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด ได้รับการอนุมัติโดยแอดมินแล้ว', 0, '2026-01-23 02:22:52'),
+(9, '67319010014', 'อนุมัติฝึกงาน: บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด', 'คำขอฝึกงานของคุณที่ บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด ได้รับการอนุมัติโดยแอดมินแล้ว', 1, '2026-01-28 09:13:00'),
+(10, '67319010014', 'อนุมัติฝึกงาน: บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด', 'คำขอฝึกงานของคุณที่ บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด ได้รับการอนุมัติโดยแอดมินแล้ว', 1, '2026-01-28 09:45:03'),
+(11, '67319010001', 'อนุมัติฝึกงาน: บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด 1', 'คำขอฝึกงานของคุณที่ บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด 1 ได้รับการอนุมัติโดยแอดมินแล้ว', 1, '2026-01-28 09:52:10'),
+(12, '67319010012', 'อนุมัติฝึกงาน: บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด 1', 'คำขอฝึกงานของคุณได้รับการอนุมัติแล้ว', 0, '2026-01-29 12:48:19'),
+(13, '67319010012', 'อนุมัติฝึกงาน: บริษัท ไซเบอร์ซีเคียวริตี้ โซลูชั่น จำกัด 1', 'คำขอฝึกงานของคุณได้รับการอนุมัติแล้ว', 1, '2026-01-29 12:49:40'),
+(14, '67319010012', 'อนุมัติฝึกงาน: ศิวกร กรุ๊ป', 'คำขอฝึกงานของคุณได้รับการอนุมัติแล้ว', 1, '2026-01-31 13:11:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_reports`
+--
+
+CREATE TABLE `tb_reports` (
+  `report_id` int(11) NOT NULL,
+  `std_id` varchar(11) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'open',
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_saved`
+--
+
+CREATE TABLE `tb_saved` (
+  `save_id` int(11) NOT NULL,
+  `std_id` varchar(11) NOT NULL,
+  `com_id` int(11) NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- Dumping data for table `tb_saved`
+--
+
+INSERT INTO `tb_saved` (`save_id`, `std_id`, `com_id`, `created_at`) VALUES
+(63, '67319010012', 23, '2026-01-26 00:18:06'),
+(64, '67319010012', 20, '2026-01-26 00:18:13'),
+(66, '01', 23, '2026-09-12 20:27:06'),
+(67, '01', 20, '2026-09-12 20:27:07');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_student`
+--
+
+CREATE TABLE `tb_student` (
+  `std_id` varchar(11) NOT NULL,
+  `std_password` varchar(255) DEFAULT NULL,
+  `std_name` varchar(150) DEFAULT NULL,
+  `std_lastname` varchar(255) DEFAULT NULL,
+  `std_level` varchar(50) DEFAULT NULL,
+  `std_room` varchar(10) DEFAULT NULL,
+  `std_add` varchar(150) DEFAULT NULL,
+  `std_add_no` varchar(50) DEFAULT NULL,
+  `std_road` varchar(100) DEFAULT NULL,
+  `std_subdistrict` varchar(100) DEFAULT NULL,
+  `std_district` varchar(100) DEFAULT NULL,
+  `std_province` varchar(100) DEFAULT NULL,
+  `std_zipcode` varchar(10) DEFAULT NULL,
+  `std_tel` varchar(10) DEFAULT NULL,
+  `std_gmail` varchar(255) DEFAULT NULL,
+  `dep_id` int(25) DEFAULT NULL,
+  `branch_id` int(11) DEFAULT NULL,
+  `std_img` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- Dumping data for table `tb_student`
+--
+
+INSERT INTO `tb_student` (`std_id`, `std_password`, `std_name`, `std_lastname`, `std_level`, `std_room`, `std_add`, `std_add_no`, `std_road`, `std_subdistrict`, `std_district`, `std_province`, `std_zipcode`, `std_tel`, `std_gmail`, `dep_id`, `branch_id`, `std_img`) VALUES
+('01', '$2y$10$/U8o1bGfR6p1Fdd6hF4q5.xMRiNQsAXwU4q0bMaJ19g3J8dV.lXbG', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('63000001', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'สมชาย', 'ใจดี', 'ปวช. 3', '1', '123 หมู่ 1 ต.ในเมือง อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0812345678', 'somchai.jai@gmail.com', 1, NULL, NULL),
+('63000002', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'วิภา', 'รักดี', 'ปวส. 1', '2', '45/2 ถ.มิตรภาพ ต.ในเมือง อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0898765432', 'wipa.ruk@gmail.com', 2, NULL, NULL),
+('63000003', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'ก้องภพ', 'สุขสม', 'ปวช. 2', '1', '99 หมู่ 3 ต.ศิลา อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0823456789', 'kongpop.suk@gmail.com', 1, NULL, NULL),
+('63000004', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'อารี', 'มีทรัพย์', 'ปวส. 2', '1', '88 หมู่ 8 ต.บ้านเป็ด อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0866667777', 'aree.mee@gmail.com', 3, NULL, NULL),
+('63000005', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'ธนพล', 'เจริญรุ่งเรือง', 'ปวช. 1', '3', '120/5 ถ.ศรีจันทร์ ต.ในเมือง อ.เมือง จ.ขอนแก่น 40000', '', '', '', '', '', '', '0912223333', 'tanapol.char@gmail.com', 2, NULL, NULL),
+('63000006', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'ณัฐชา', 'วงษ์สวัสดิ์', 'ปวส. 1', '2', '34 หมู่ 5 ต.พระลับ อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0845558888', 'natcha.wong@gmail.com', 1, NULL, NULL),
+('63000007', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'ประวิทย์', 'มั่นคง', 'ปวช. 3', '2', '77/7 หมู่ 7 ต.สาวะถี อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0877779999', 'prawit.mun@gmail.com', 3, NULL, NULL),
+('63000008', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'กมลวรรณ', 'ศรีสุข', 'ปวส. 2', '1', '50 หมู่ 2 ต.ท่าพระ อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0833334444', 'kamonwan.sri@gmail.com', 2, NULL, NULL),
+('63000009', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'อนุชา', 'ยอดเยี่ยม', 'ปวช. 2', '3', '101/1 ถ.กลางเมือง ต.ในเมือง อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0955556666', 'anucha.yod@gmail.com', 1, NULL, NULL),
+('63000010', '$2y$10$w.43ewJzwEDPdClWxktZf.4rjXRP58SZbBYTGZRb8JUdjLPECoNJK', 'สุดา', 'งามตา', 'ปวช. 1', '1', '25 หมู่ 9 ต.บึงเนียม อ.เมือง จ.ขอนแก่น 40000', NULL, NULL, NULL, NULL, NULL, NULL, '0888882222', 'suda.ngam@gmail.com', 3, NULL, NULL),
+('67319010001', '$2y$10$pHz8lxbmWq4RmfX3assE2uEp38g2AmtCZriSz5qNhKhSO5xMiXcUS', 'นาย ธนวัตน์', 'เชื้อหนองปง', 'ปวส. 2', '1', '', '', '', '', '', '', '', '0888882222', '67319010001@stc.ac.th', 8, NULL, NULL),
+('67319010002', '$2y$10$Az1f8QpAQOK20n9VWohCmuQhn1uDyhO9/Kn07E5LZCBHH2FC9H7Qm', 'นาย อมรเทพ', 'ยอดยา', 'ปวส. 2', '1', '', '', '', '', '', '', '', '0888882222', '67319010002@stc.ac.th', 8, NULL, NULL),
+('67319010012', '$2y$10$EknD8ATMuGUYwTdV6u6aA.y/n4eZFcEpvu0lUirS3HxXa/bzznmNG', 'ภาณุวัฒน์', 'พรมวงษา', 'ปวส. 2', '1 ม.6', '00 หมู่00', '', '', '', '', '', '', '0925040546', '67319010012@stc.ac.th', 1, NULL, NULL),
+('67319010014', '$2y$10$Ifkd7M3eWLtZtK9Mhtn5JufWlrNJ7ywtfePKUfckZh5iNiLEX.h1i', 'นาย ศิวกร', 'ดอกกุหลาบ', 'ปวส. 2', '1 ม.6', '', '', '', '', '', '', '', '0925040546', '67319010014@stc.ac.th', 8, NULL, NULL);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `tb_admin`
+--
+ALTER TABLE `tb_admin`
+  ADD PRIMARY KEY (`ad_id`),
+  ADD UNIQUE KEY `ad_gmail` (`ad_gmail`);
+
+--
+-- Indexes for table `tb_branch`
+--
+ALTER TABLE `tb_branch`
+  ADD PRIMARY KEY (`branch_id`),
+  ADD KEY `idx_branch_department` (`dep_id`);
+
+--
+-- Indexes for table `tb_company`
+--
+ALTER TABLE `tb_company`
+  ADD PRIMARY KEY (`com_id`),
+  ADD KEY `idx_company_department` (`dep_id`);
+
+--
+-- Indexes for table `tb_company_detail`
+--
+ALTER TABLE `tb_company_detail`
+  ADD PRIMARY KEY (`detail_id`),
+  ADD KEY `com_id` (`com_id`),
+  ADD KEY `idx_detail_company` (`com_id`);
+
+--
+-- Indexes for table `tb_department`
+--
+ALTER TABLE `tb_department`
+  ADD PRIMARY KEY (`dep_id`);
+
+--
+-- Indexes for table `tb_internship`
+--
+ALTER TABLE `tb_internship`
+  ADD PRIMARY KEY (`intern_id`),
+  ADD KEY `std_id_2` (`std_id`,`com_id`),
+  ADD KEY `idx_internship_status` (`status`),
+  ADD KEY `idx_internship_student` (`std_id`),
+  ADD KEY `idx_internship_company` (`com_id`),
+  ADD KEY `fk_internship_detail_ref_2026` (`detail_id`);
+
+--
+-- Indexes for table `tb_notifications`
+--
+ALTER TABLE `tb_notifications`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `tb_reports`
+--
+ALTER TABLE `tb_reports`
+  ADD PRIMARY KEY (`report_id`),
+  ADD KEY `std_id` (`std_id`),
+  ADD KEY `idx_report_student` (`std_id`);
+
+--
+-- Indexes for table `tb_saved`
+--
+ALTER TABLE `tb_saved`
+  ADD PRIMARY KEY (`save_id`),
+  ADD UNIQUE KEY `uniq_std_com` (`std_id`,`com_id`),
+  ADD KEY `idx_saved_student` (`std_id`),
+  ADD KEY `idx_saved_company` (`com_id`);
+
+--
+-- Indexes for table `tb_student`
+--
+ALTER TABLE `tb_student`
+  ADD PRIMARY KEY (`std_id`),
+  ADD KEY `dep_id` (`dep_id`),
+  ADD KEY `idx_student_department` (`dep_id`),
+  ADD KEY `idx_student_email` (`std_gmail`),
+  ADD KEY `fk_student_branch` (`branch_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `tb_branch`
+--
+ALTER TABLE `tb_branch`
+  MODIFY `branch_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_company`
+--
+ALTER TABLE `tb_company`
+  MODIFY `com_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+
+--
+-- AUTO_INCREMENT for table `tb_company_detail`
+--
+ALTER TABLE `tb_company_detail`
+  MODIFY `detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+
+--
+-- AUTO_INCREMENT for table `tb_internship`
+--
+ALTER TABLE `tb_internship`
+  MODIFY `intern_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `tb_notifications`
+--
+ALTER TABLE `tb_notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `tb_reports`
+--
+ALTER TABLE `tb_reports`
+  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `tb_saved`
+--
+ALTER TABLE `tb_saved`
+  MODIFY `save_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `tb_branch`
+--
+ALTER TABLE `tb_branch`
+  ADD CONSTRAINT `fk_branch_department` FOREIGN KEY (`dep_id`) REFERENCES `tb_department` (`dep_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `tb_company`
+--
+ALTER TABLE `tb_company`
+  ADD CONSTRAINT `fk_company_department` FOREIGN KEY (`dep_id`) REFERENCES `tb_department` (`dep_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `tb_company_detail`
+--
+ALTER TABLE `tb_company_detail`
+  ADD CONSTRAINT `fk_company_detail` FOREIGN KEY (`com_id`) REFERENCES `tb_company` (`com_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tb_internship`
+--
+ALTER TABLE `tb_internship`
+  ADD CONSTRAINT `fk_internship_company` FOREIGN KEY (`com_id`) REFERENCES `tb_company` (`com_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_internship_detail` FOREIGN KEY (`detail_id`) REFERENCES `tb_company_detail` (`detail_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_internship_detail_ref_2026` FOREIGN KEY (`detail_id`) REFERENCES `tb_company_detail` (`detail_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_internship_job_detail` FOREIGN KEY (`detail_id`) REFERENCES `tb_company_detail` (`detail_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_internship_student` FOREIGN KEY (`std_id`) REFERENCES `tb_student` (`std_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `tb_reports`
+--
+ALTER TABLE `tb_reports`
+  ADD CONSTRAINT `fk_reports_student` FOREIGN KEY (`std_id`) REFERENCES `tb_student` (`std_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `tb_saved`
+--
+ALTER TABLE `tb_saved`
+  ADD CONSTRAINT `fk_saved_company` FOREIGN KEY (`com_id`) REFERENCES `tb_company` (`com_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_saved_student` FOREIGN KEY (`std_id`) REFERENCES `tb_student` (`std_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `tb_student`
+--
+ALTER TABLE `tb_student`
+  ADD CONSTRAINT `fk_student_branch` FOREIGN KEY (`branch_id`) REFERENCES `tb_branch` (`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_student_department` FOREIGN KEY (`dep_id`) REFERENCES `tb_department` (`dep_id`) ON DELETE SET NULL;
+--
+-- Database: `db_internship`
+--
+CREATE DATABASE IF NOT EXISTS `db_internship` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `db_internship`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_admin`
+--
+
+CREATE TABLE `tb_admin` (
+  `admin_id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `full_name` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_application`
+--
+
+CREATE TABLE `tb_application` (
+  `app_id` int(11) NOT NULL,
+  `std_id` varchar(20) NOT NULL,
+  `job_id` int(11) NOT NULL,
+  `apply_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` enum('Pending','Reviewed','Accepted','Rejected') DEFAULT 'Pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_company`
+--
+
+CREATE TABLE `tb_company` (
+  `comp_id` int(11) NOT NULL,
+  `name` varchar(200) NOT NULL,
+  `description` text DEFAULT NULL,
+  `logo_path` varchar(255) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `website` varchar(255) DEFAULT NULL,
+  `contact_email` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_job`
+--
+
+CREATE TABLE `tb_job` (
+  `job_id` int(11) NOT NULL,
+  `comp_id` int(11) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `location` varchar(200) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `requirements` text DEFAULT NULL,
+  `benefits` text DEFAULT NULL,
+  `salary_range` varchar(100) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_student`
+--
+
+CREATE TABLE `tb_student` (
+  `std_id` varchar(20) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `major` varchar(100) DEFAULT NULL,
+  `level` varchar(50) DEFAULT NULL,
+  `resume_path` varchar(255) DEFAULT NULL,
+  `profile_img` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tb_student`
+--
+
+INSERT INTO `tb_student` (`std_id`, `password`, `first_name`, `last_name`, `email`, `phone`, `major`, `level`, `resume_path`, `profile_img`, `created_at`) VALUES
+('1', '1', '1', '1', '11', '1', '1', NULL, NULL, NULL, '2026-01-13 18:32:18'),
+('22', '$2y$10$7VhEkkigTF17Nuk/fa3rXuT4v2J8sbwzKkSoF3lihLBi1jxaB8gZq', 'ice', 'น', 'freev42@gmail.com', NULL, 'อิเล็กทรอนิกส์', 'ปวส.2', NULL, NULL, '2026-01-13 18:33:09'),
+('67319010012', '09/02/2549', 'ภาณุวัฒน์ ', 'พรมวงษา', '67319010012stc.ac.th', '0925040546', 'อิเล็กทรอนิกส์', 'ปวส.2', NULL, NULL, '2026-01-13 18:30:47');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `tb_admin`
+--
+ALTER TABLE `tb_admin`
+  ADD PRIMARY KEY (`admin_id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
+-- Indexes for table `tb_application`
+--
+ALTER TABLE `tb_application`
+  ADD PRIMARY KEY (`app_id`),
+  ADD KEY `std_id` (`std_id`),
+  ADD KEY `job_id` (`job_id`);
+
+--
+-- Indexes for table `tb_company`
+--
+ALTER TABLE `tb_company`
+  ADD PRIMARY KEY (`comp_id`);
+
+--
+-- Indexes for table `tb_job`
+--
+ALTER TABLE `tb_job`
+  ADD PRIMARY KEY (`job_id`),
+  ADD KEY `comp_id` (`comp_id`);
+
+--
+-- Indexes for table `tb_student`
+--
+ALTER TABLE `tb_student`
+  ADD PRIMARY KEY (`std_id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `tb_admin`
+--
+ALTER TABLE `tb_admin`
+  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_application`
+--
+ALTER TABLE `tb_application`
+  MODIFY `app_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_company`
+--
+ALTER TABLE `tb_company`
+  MODIFY `comp_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_job`
+--
+ALTER TABLE `tb_job`
+  MODIFY `job_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `tb_application`
+--
+ALTER TABLE `tb_application`
+  ADD CONSTRAINT `tb_application_ibfk_1` FOREIGN KEY (`std_id`) REFERENCES `tb_student` (`std_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tb_application_ibfk_2` FOREIGN KEY (`job_id`) REFERENCES `tb_job` (`job_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tb_job`
+--
+ALTER TABLE `tb_job`
+  ADD CONSTRAINT `tb_job_ibfk_1` FOREIGN KEY (`comp_id`) REFERENCES `tb_company` (`comp_id`) ON DELETE CASCADE;
+--
+-- Database: `internship_system`
+--
+CREATE DATABASE IF NOT EXISTS `internship_system` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `internship_system`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin`
+--
+
+CREATE TABLE `admin` (
+  `ad_id` varchar(20) NOT NULL,
+  `ad_password` varchar(255) NOT NULL,
+  `ad_name` varchar(100) NOT NULL,
+  `ad_gmail` varchar(100) DEFAULT NULL,
+  `ad_tel` varchar(20) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `company`
+--
+
+CREATE TABLE `company` (
+  `com_id` int(11) NOT NULL,
+  `com_name` varchar(255) NOT NULL,
+  `com_address` text DEFAULT NULL,
+  `com_tel` varchar(20) DEFAULT NULL,
+  `com_contact` varchar(100) DEFAULT NULL,
+  `com_detail` text DEFAULT NULL,
+  `com_created` datetime DEFAULT current_timestamp(),
+  `com_img` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `department`
+--
+
+CREATE TABLE `department` (
+  `dep_id` int(11) NOT NULL,
+  `dep_name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `intern`
+--
+
+CREATE TABLE `intern` (
+  `intern_id` int(11) NOT NULL,
+  `std_id` varchar(20) DEFAULT NULL,
+  `com_id` int(11) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` varchar(20) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_detail`
+--
+
+CREATE TABLE `job_detail` (
+  `detail_id` int(11) NOT NULL,
+  `com_id` int(11) DEFAULT NULL,
+  `job_title` varchar(100) DEFAULT NULL,
+  `job_type` varchar(100) DEFAULT NULL,
+  `job_description` text DEFAULT NULL,
+  `job_qualification` text DEFAULT NULL,
+  `job_welfare` text DEFAULT NULL,
+  `allowance` varchar(50) DEFAULT NULL,
+  `work_time` varchar(50) DEFAULT NULL,
+  `work_day` varchar(50) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `report`
+--
+
+CREATE TABLE `report` (
+  `report_id` int(11) NOT NULL,
+  `std_id` varchar(20) DEFAULT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `message` text DEFAULT NULL,
+  `status` varchar(20) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `save`
+--
+
+CREATE TABLE `save` (
+  `save_id` int(11) NOT NULL,
+  `std_id` varchar(20) DEFAULT NULL,
+  `com_id` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student`
+--
+
+CREATE TABLE `student` (
+  `std_id` varchar(20) NOT NULL,
+  `std_password` varchar(100) NOT NULL,
+  `std_name` varchar(100) DEFAULT NULL,
+  `std_add` text DEFAULT NULL,
+  `std_tel` varchar(20) DEFAULT NULL,
+  `std_gmail` varchar(100) DEFAULT NULL,
+  `dep_id` int(11) DEFAULT NULL,
+  `com_id` int(11) DEFAULT NULL,
+  `std_img` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `admin`
+--
+ALTER TABLE `admin`
+  ADD PRIMARY KEY (`ad_id`);
+
+--
+-- Indexes for table `company`
+--
+ALTER TABLE `company`
+  ADD PRIMARY KEY (`com_id`);
+
+--
+-- Indexes for table `department`
+--
+ALTER TABLE `department`
+  ADD PRIMARY KEY (`dep_id`);
+
+--
+-- Indexes for table `intern`
+--
+ALTER TABLE `intern`
+  ADD PRIMARY KEY (`intern_id`),
+  ADD KEY `fk_intern_std` (`std_id`),
+  ADD KEY `fk_intern_com` (`com_id`);
+
+--
+-- Indexes for table `job_detail`
+--
+ALTER TABLE `job_detail`
+  ADD PRIMARY KEY (`detail_id`),
+  ADD KEY `fk_job_com` (`com_id`);
+
+--
+-- Indexes for table `report`
+--
+ALTER TABLE `report`
+  ADD PRIMARY KEY (`report_id`),
+  ADD KEY `fk_report_std` (`std_id`);
+
+--
+-- Indexes for table `save`
+--
+ALTER TABLE `save`
+  ADD PRIMARY KEY (`save_id`),
+  ADD KEY `fk_save_std` (`std_id`),
+  ADD KEY `fk_save_com` (`com_id`);
+
+--
+-- Indexes for table `student`
+--
+ALTER TABLE `student`
+  ADD PRIMARY KEY (`std_id`),
+  ADD KEY `fk_student_dep` (`dep_id`),
+  ADD KEY `fk_student_com` (`com_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `company`
+--
+ALTER TABLE `company`
+  MODIFY `com_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `intern`
+--
+ALTER TABLE `intern`
+  MODIFY `intern_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `job_detail`
+--
+ALTER TABLE `job_detail`
+  MODIFY `detail_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `report`
+--
+ALTER TABLE `report`
+  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `save`
+--
+ALTER TABLE `save`
+  MODIFY `save_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `intern`
+--
+ALTER TABLE `intern`
+  ADD CONSTRAINT `fk_intern_com` FOREIGN KEY (`com_id`) REFERENCES `company` (`com_id`),
+  ADD CONSTRAINT `fk_intern_std` FOREIGN KEY (`std_id`) REFERENCES `student` (`std_id`);
+
+--
+-- Constraints for table `job_detail`
+--
+ALTER TABLE `job_detail`
+  ADD CONSTRAINT `fk_job_com` FOREIGN KEY (`com_id`) REFERENCES `company` (`com_id`);
+
+--
+-- Constraints for table `report`
+--
+ALTER TABLE `report`
+  ADD CONSTRAINT `fk_report_std` FOREIGN KEY (`std_id`) REFERENCES `student` (`std_id`);
+
+--
+-- Constraints for table `save`
+--
+ALTER TABLE `save`
+  ADD CONSTRAINT `fk_save_com` FOREIGN KEY (`com_id`) REFERENCES `company` (`com_id`),
+  ADD CONSTRAINT `fk_save_std` FOREIGN KEY (`std_id`) REFERENCES `student` (`std_id`);
+
+--
+-- Constraints for table `student`
+--
+ALTER TABLE `student`
+  ADD CONSTRAINT `fk_student_com` FOREIGN KEY (`com_id`) REFERENCES `company` (`com_id`),
+  ADD CONSTRAINT `fk_student_dep` FOREIGN KEY (`dep_id`) REFERENCES `department` (`dep_id`);
+--
+-- Database: `itihostxp`
+--
+CREATE DATABASE IF NOT EXISTS `itihostxp` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `itihostxp`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctor`
+--
+
+CREATE TABLE `doctor` (
+  `Doctor_id` varchar(12) NOT NULL,
+  `Doctor_Name` varchar(100) NOT NULL,
+  `specialty` varchar(150) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicine`
+--
+
+CREATE TABLE `medicine` (
+  `medicine_id` int(11) NOT NULL,
+  `medicine_name` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `type_id` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicine_type`
+--
+
+CREATE TABLE `medicine_type` (
+  `type_id` varchar(10) NOT NULL,
+  `type_name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient`
+--
+
+CREATE TABLE `patient` (
+  `patient_id` varchar(10) NOT NULL,
+  `full_name` varchar(100) NOT NULL,
+  `adress` text NOT NULL,
+  `weight` decimal(5,2) NOT NULL,
+  `height` decimal(5,2) NOT NULL,
+  `blood_pressure` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `treatment`
+--
+
+CREATE TABLE `treatment` (
+  `Treatment_id` varchar(10) NOT NULL,
+  `Treatment_date` date NOT NULL,
+  `datail` text NOT NULL,
+  `Treatment_fee` decimal(10,2) NOT NULL,
+  `doctor_id` varchar(12) NOT NULL,
+  `patient_id` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `treatment_detail`
+--
+
+CREATE TABLE `treatment_detail` (
+  `amount` int(11) NOT NULL,
+  `Treatment_id` varchar(10) NOT NULL,
+  `medicine_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `doctor`
+--
+ALTER TABLE `doctor`
+  ADD PRIMARY KEY (`Doctor_id`);
+
+--
+-- Indexes for table `medicine`
+--
+ALTER TABLE `medicine`
+  ADD PRIMARY KEY (`medicine_id`),
+  ADD KEY `fk_medicine_type` (`type_id`);
+
+--
+-- Indexes for table `medicine_type`
+--
+ALTER TABLE `medicine_type`
+  ADD PRIMARY KEY (`type_id`);
+
+--
+-- Indexes for table `patient`
+--
+ALTER TABLE `patient`
+  ADD PRIMARY KEY (`patient_id`);
+
+--
+-- Indexes for table `treatment`
+--
+ALTER TABLE `treatment`
+  ADD KEY `fk_treatment_doctor` (`doctor_id`),
+  ADD KEY `fk_treatment_patient` (`patient_id`);
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `medicine`
+--
+ALTER TABLE `medicine`
+  ADD CONSTRAINT `fk_medicine_type` FOREIGN KEY (`type_id`) REFERENCES `medicine_type` (`type_id`);
+
+--
+-- Constraints for table `treatment`
+--
+ALTER TABLE `treatment`
+  ADD CONSTRAINT `fk_treatment_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctor` (`Doctor_id`),
+  ADD CONSTRAINT `fk_treatment_patient` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`patient_id`);
+--
+-- Database: `itihostxp2231`
+--
+CREATE DATABASE IF NOT EXISTS `itihostxp2231` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `itihostxp2231`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doctors`
+--
+
+CREATE TABLE `doctors` (
+  `doctor_id` varchar(10) NOT NULL,
+  `doctor_name` varchar(100) NOT NULL,
+  `specialty` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `doctors`
+--
+
+INSERT INTO `doctors` (`doctor_id`, `doctor_name`, `specialty`) VALUES
+('D001', 'นพ.สมชาย ใจดี', 'อายุรกรรม'),
+('D002', 'พญ.สุดา รักสุขภาพ', 'กุมารเวชกรรม'),
+('D003', 'นพ.วิทยา แสงทอง', 'ศัลยกรรม'),
+('D004', 'พญ.นภา สุขใจ', 'สูตินรีเวชกรรม'),
+('D005', 'นพ.กิตติพงษ์ มีสุข', 'กระดูกและข้อ'),
+('D006', 'พญ.จันทร์เพ็ญ บุญมี', 'ผิวหนัง'),
+('D007', 'นพ.อนุชา เก่งกล้า', 'หัวใจและหลอดเลือด'),
+('D008', 'พญ.อรทัย รุ่งเรือง', 'จักษุวิทยา'),
+('D009', 'นพ.ธนกร วัฒนะ', 'หู คอ จมูก'),
+('D010', 'พญ.ปวีณา สุขสันต์', 'ประสาทวิทยา');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicines`
+--
+
+CREATE TABLE `medicines` (
+  `medicine_id` varchar(10) NOT NULL,
+  `medicine_name` varchar(100) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `medicine_type_id` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `medicines`
+--
+
+INSERT INTO `medicines` (`medicine_id`, `medicine_name`, `quantity`, `medicine_type_id`) VALUES
+('M001', 'Paracetamol 500 mg', 500, 'MT002'),
+('M002', 'Ibuprofen 400 mg', 300, 'MT001'),
+('M003', 'Amoxicillin 500 mg', 250, 'MT003'),
+('M004', 'Cetirizine 10 mg', 400, 'MT004'),
+('M005', 'Amlodipine 5 mg', 200, 'MT005'),
+('M006', 'Metformin 500 mg', 350, 'MT006'),
+('M007', 'Omeprazole 20 mg', 300, 'MT007'),
+('M008', 'Ferrous Sulfate 200 mg', 180, 'MT008'),
+('M009', 'Hydrocortisone Cream', 100, 'MT009'),
+('M010', 'Artificial Tears', 150, 'MT010');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicine_types`
+--
+
+CREATE TABLE `medicine_types` (
+  `medicine_type_id` varchar(10) NOT NULL,
+  `type_name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `medicine_types`
+--
+
+INSERT INTO `medicine_types` (`medicine_type_id`, `type_name`) VALUES
+('MT001', 'ยาแก้ปวด'),
+('MT002', 'ยาลดไข้'),
+('MT003', 'ยาปฏิชีวนะ'),
+('MT004', 'ยาแก้แพ้'),
+('MT005', 'ยาลดความดัน'),
+('MT006', 'ยาเบาหวาน'),
+('MT007', 'ยาลดกรด'),
+('MT008', 'ยาบำรุงเลือด'),
+('MT009', 'ยาทาภายนอก'),
+('MT010', 'ยาหยอดตา');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patients`
+--
+
+CREATE TABLE `patients` (
+  `patient_id` varchar(10) NOT NULL,
+  `patient_name` varchar(100) NOT NULL,
+  `address` text DEFAULT NULL,
+  `weight` decimal(5,2) DEFAULT NULL,
+  `height` decimal(5,2) DEFAULT NULL,
+  `blood_pressure` varchar(10) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `patients`
+--
+
+INSERT INTO `patients` (`patient_id`, `patient_name`, `address`, `weight`, `height`, `blood_pressure`) VALUES
+('P001', 'นายสมพงษ์ คงดี', '99/1 ต.ในเมือง อ.เมือง จ.สุพรรณบุรี', 68.50, 170.00, '120/80'),
+('P002', 'นางสาวสุดารัตน์ ใจงาม', '12/5 ต.ท่าพี่เลี้ยง อ.เมือง จ.สุพรรณบุรี', 55.20, 160.00, '118/76'),
+('P003', 'นายวิชัย บุญช่วย', '45/8 ต.บางปลาม้า อ.บางปลาม้า จ.สุพรรณบุรี', 75.00, 175.00, '130/85'),
+('P004', 'นางสาวอรทัย แก้วใส', '88/2 ต.รั้วใหญ่ อ.เมือง จ.สุพรรณบุรี', 52.30, 158.00, '110/70'),
+('P005', 'นายประเสริฐ มั่นคง', '21/9 ต.สองพี่น้อง อ.สองพี่น้อง จ.สุพรรณบุรี', 82.10, 172.00, '135/88'),
+('P006', 'นางสาวกมลวรรณ สุขดี', '67/4 ต.อู่ทอง อ.อู่ทอง จ.สุพรรณบุรี', 60.00, 165.00, '115/75'),
+('P007', 'นายณัฐพล รุ่งโรจน์', '15/6 ต.สามชุก อ.สามชุก จ.สุพรรณบุรี', 70.40, 168.00, '125/82'),
+('P008', 'นางสาวพิมพ์ชนก ทองดี', '33/7 ต.ศรีประจันต์ อ.ศรีประจันต์ จ.สุพรรณบุรี', 49.80, 155.00, '112/72'),
+('P009', 'นายเอกชัย มีสุข', '72/3 ต.เดิมบาง อ.เดิมบางนางบวช จ.สุพรรณบุรี', 78.60, 178.00, '128/84'),
+('P010', 'นางสาวชลธิชา แสงทอง', '19/2 ต.ดอนเจดีย์ อ.ดอนเจดีย์ จ.สุพรรณบุรี', 57.50, 162.00, '116/78');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `prescriptions`
+--
+
+CREATE TABLE `prescriptions` (
+  `treatment_id` varchar(10) NOT NULL,
+  `medicine_id` varchar(10) NOT NULL,
+  `amount` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `prescriptions`
+--
+
+INSERT INTO `prescriptions` (`treatment_id`, `medicine_id`, `amount`) VALUES
+('T001', 'M001', 10),
+('T002', 'M004', 10),
+('T003', 'M007', 14),
+('T004', 'M009', 1),
+('T005', 'M005', 30),
+('T006', 'M002', 10),
+('T007', 'M001', 10),
+('T008', 'M010', 2),
+('T009', 'M006', 30),
+('T010', 'M001', 10);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `treatments`
+--
+
+CREATE TABLE `treatments` (
+  `treatment_id` varchar(10) NOT NULL,
+  `treatment_date` datetime NOT NULL,
+  `details` text DEFAULT NULL,
+  `treatment_fee` decimal(10,2) DEFAULT NULL,
+  `doctor_id` varchar(10) NOT NULL,
+  `patient_id` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `treatments`
+--
+
+INSERT INTO `treatments` (`treatment_id`, `treatment_date`, `details`, `treatment_fee`, `doctor_id`, `patient_id`) VALUES
+('T001', '2026-09-01 09:00:00', 'ตรวจอาการไข้และปวดศีรษะ', 500.00, 'D001', 'P001'),
+('T002', '2026-09-01 10:00:00', 'ตรวจสุขภาพและอาการแพ้', 600.00, 'D002', 'P002'),
+('T003', '2026-09-02 09:30:00', 'ตรวจอาการปวดท้อง', 550.00, 'D001', 'P003'),
+('T004', '2026-09-02 13:00:00', 'ตรวจอาการแพ้ผิวหนัง', 700.00, 'D006', 'P004'),
+('T005', '2026-09-03 10:30:00', 'ตรวจความดันโลหิตสูง', 800.00, 'D007', 'P005'),
+('T006', '2026-09-03 14:00:00', 'ตรวจอาการปวดข้อ', 750.00, 'D005', 'P006'),
+('T007', '2026-09-04 09:00:00', 'ตรวจอาการไข้หวัด', 500.00, 'D009', 'P007'),
+('T008', '2026-09-04 11:00:00', 'ตรวจอาการระคายเคืองตา', 650.00, 'D008', 'P008'),
+('T009', '2026-09-05 10:00:00', 'ตรวจโรคเบาหวาน', 900.00, 'D001', 'P009'),
+('T010', '2026-09-05 13:30:00', 'ตรวจอาการปวดศีรษะ', 600.00, 'D010', 'P010');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `doctors`
+--
+ALTER TABLE `doctors`
+  ADD PRIMARY KEY (`doctor_id`);
+
+--
+-- Indexes for table `medicines`
+--
+ALTER TABLE `medicines`
+  ADD PRIMARY KEY (`medicine_id`),
+  ADD KEY `fk_medicines_medicine_type` (`medicine_type_id`);
+
+--
+-- Indexes for table `medicine_types`
+--
+ALTER TABLE `medicine_types`
+  ADD PRIMARY KEY (`medicine_type_id`);
+
+--
+-- Indexes for table `patients`
+--
+ALTER TABLE `patients`
+  ADD PRIMARY KEY (`patient_id`);
+
+--
+-- Indexes for table `prescriptions`
+--
+ALTER TABLE `prescriptions`
+  ADD PRIMARY KEY (`treatment_id`,`medicine_id`),
+  ADD KEY `fk_prescriptions_medicine` (`medicine_id`);
+
+--
+-- Indexes for table `treatments`
+--
+ALTER TABLE `treatments`
+  ADD PRIMARY KEY (`treatment_id`),
+  ADD KEY `fk_treatments_doctor` (`doctor_id`),
+  ADD KEY `fk_treatments_patient` (`patient_id`);
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `medicines`
+--
+ALTER TABLE `medicines`
+  ADD CONSTRAINT `fk_medicines_medicine_type` FOREIGN KEY (`medicine_type_id`) REFERENCES `medicine_types` (`medicine_type_id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `prescriptions`
+--
+ALTER TABLE `prescriptions`
+  ADD CONSTRAINT `fk_prescriptions_medicine` FOREIGN KEY (`medicine_id`) REFERENCES `medicines` (`medicine_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_prescriptions_treatment` FOREIGN KEY (`treatment_id`) REFERENCES `treatments` (`treatment_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `treatments`
+--
+ALTER TABLE `treatments`
+  ADD CONSTRAINT `fk_treatments_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`doctor_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_treatments_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON UPDATE CASCADE;
+--
+-- Database: `phpmyadmin`
+--
+CREATE DATABASE IF NOT EXISTS `phpmyadmin` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+USE `phpmyadmin`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__bookmark`
+--
+
+CREATE TABLE `pma__bookmark` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `dbase` varchar(255) NOT NULL DEFAULT '',
+  `user` varchar(255) NOT NULL DEFAULT '',
+  `label` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `query` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Bookmarks';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__central_columns`
+--
+
+CREATE TABLE `pma__central_columns` (
+  `db_name` varchar(64) NOT NULL,
+  `col_name` varchar(64) NOT NULL,
+  `col_type` varchar(64) NOT NULL,
+  `col_length` text DEFAULT NULL,
+  `col_collation` varchar(64) NOT NULL,
+  `col_isNull` tinyint(1) NOT NULL,
+  `col_extra` varchar(255) DEFAULT '',
+  `col_default` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Central list of columns';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__column_info`
+--
+
+CREATE TABLE `pma__column_info` (
+  `id` int(5) UNSIGNED NOT NULL,
+  `db_name` varchar(64) NOT NULL DEFAULT '',
+  `table_name` varchar(64) NOT NULL DEFAULT '',
+  `column_name` varchar(64) NOT NULL DEFAULT '',
+  `comment` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `mimetype` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `transformation` varchar(255) NOT NULL DEFAULT '',
+  `transformation_options` varchar(255) NOT NULL DEFAULT '',
+  `input_transformation` varchar(255) NOT NULL DEFAULT '',
+  `input_transformation_options` varchar(255) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Column information for phpMyAdmin';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__designer_settings`
+--
+
+CREATE TABLE `pma__designer_settings` (
+  `username` varchar(64) NOT NULL,
+  `settings_data` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Settings related to Designer';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__export_templates`
+--
+
+CREATE TABLE `pma__export_templates` (
+  `id` int(5) UNSIGNED NOT NULL,
+  `username` varchar(64) NOT NULL,
+  `export_type` varchar(10) NOT NULL,
+  `template_name` varchar(64) NOT NULL,
+  `template_data` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Saved export templates';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__favorite`
+--
+
+CREATE TABLE `pma__favorite` (
+  `username` varchar(64) NOT NULL,
+  `tables` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Favorite tables';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__history`
+--
+
+CREATE TABLE `pma__history` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `username` varchar(64) NOT NULL DEFAULT '',
+  `db` varchar(64) NOT NULL DEFAULT '',
+  `table` varchar(64) NOT NULL DEFAULT '',
+  `timevalue` timestamp NOT NULL DEFAULT current_timestamp(),
+  `sqlquery` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='SQL history for phpMyAdmin';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__navigationhiding`
+--
+
+CREATE TABLE `pma__navigationhiding` (
+  `username` varchar(64) NOT NULL,
+  `item_name` varchar(64) NOT NULL,
+  `item_type` varchar(64) NOT NULL,
+  `db_name` varchar(64) NOT NULL,
+  `table_name` varchar(64) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Hidden items of navigation tree';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__pdf_pages`
+--
+
+CREATE TABLE `pma__pdf_pages` (
+  `db_name` varchar(64) NOT NULL DEFAULT '',
+  `page_nr` int(10) UNSIGNED NOT NULL,
+  `page_descr` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='PDF relation pages for phpMyAdmin';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__recent`
+--
+
+CREATE TABLE `pma__recent` (
+  `username` varchar(64) NOT NULL,
+  `tables` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Recently accessed tables';
+
+--
+-- Dumping data for table `pma__recent`
+--
+
+INSERT INTO `pma__recent` (`username`, `tables`) VALUES
+('root', '[{\"db\":\"db_internfider\",\"table\":\"tb_admin\"},{\"db\":\"db_internfider\",\"table\":\"tb_internship\"},{\"db\":\"db_internfider\",\"table\":\"tb_company\"},{\"db\":\"db_internfider\",\"table\":\"tb_student\"},{\"db\":\"db_internfider\",\"table\":\"tb_department\"}]');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__relation`
+--
+
+CREATE TABLE `pma__relation` (
+  `master_db` varchar(64) NOT NULL DEFAULT '',
+  `master_table` varchar(64) NOT NULL DEFAULT '',
+  `master_field` varchar(64) NOT NULL DEFAULT '',
+  `foreign_db` varchar(64) NOT NULL DEFAULT '',
+  `foreign_table` varchar(64) NOT NULL DEFAULT '',
+  `foreign_field` varchar(64) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Relation table';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__savedsearches`
+--
+
+CREATE TABLE `pma__savedsearches` (
+  `id` int(5) UNSIGNED NOT NULL,
+  `username` varchar(64) NOT NULL DEFAULT '',
+  `db_name` varchar(64) NOT NULL DEFAULT '',
+  `search_name` varchar(64) NOT NULL DEFAULT '',
+  `search_data` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Saved searches';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__table_coords`
+--
+
+CREATE TABLE `pma__table_coords` (
+  `db_name` varchar(64) NOT NULL DEFAULT '',
+  `table_name` varchar(64) NOT NULL DEFAULT '',
+  `pdf_page_number` int(11) NOT NULL DEFAULT 0,
+  `x` float UNSIGNED NOT NULL DEFAULT 0,
+  `y` float UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Table coordinates for phpMyAdmin PDF output';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__table_info`
+--
+
+CREATE TABLE `pma__table_info` (
+  `db_name` varchar(64) NOT NULL DEFAULT '',
+  `table_name` varchar(64) NOT NULL DEFAULT '',
+  `display_field` varchar(64) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Table information for phpMyAdmin';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__table_uiprefs`
+--
+
+CREATE TABLE `pma__table_uiprefs` (
+  `username` varchar(64) NOT NULL,
+  `db_name` varchar(64) NOT NULL,
+  `table_name` varchar(64) NOT NULL,
+  `prefs` text NOT NULL,
+  `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Tables'' UI preferences';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__tracking`
+--
+
+CREATE TABLE `pma__tracking` (
+  `db_name` varchar(64) NOT NULL,
+  `table_name` varchar(64) NOT NULL,
+  `version` int(10) UNSIGNED NOT NULL,
+  `date_created` datetime NOT NULL,
+  `date_updated` datetime NOT NULL,
+  `schema_snapshot` text NOT NULL,
+  `schema_sql` text DEFAULT NULL,
+  `data_sql` longtext DEFAULT NULL,
+  `tracking` set('UPDATE','REPLACE','INSERT','DELETE','TRUNCATE','CREATE DATABASE','ALTER DATABASE','DROP DATABASE','CREATE TABLE','ALTER TABLE','RENAME TABLE','DROP TABLE','CREATE INDEX','DROP INDEX','CREATE VIEW','ALTER VIEW','DROP VIEW') DEFAULT NULL,
+  `tracking_active` int(1) UNSIGNED NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Database changes tracking for phpMyAdmin';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__userconfig`
+--
+
+CREATE TABLE `pma__userconfig` (
+  `username` varchar(64) NOT NULL,
+  `timevalue` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `config_data` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='User preferences storage for phpMyAdmin';
+
+--
+-- Dumping data for table `pma__userconfig`
+--
+
+INSERT INTO `pma__userconfig` (`username`, `timevalue`, `config_data`) VALUES
+('root', '2025-12-11 05:20:43', '{\"Console\\/Mode\":\"collapse\"}');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__usergroups`
+--
+
+CREATE TABLE `pma__usergroups` (
+  `usergroup` varchar(64) NOT NULL,
+  `tab` varchar(64) NOT NULL,
+  `allowed` enum('Y','N') NOT NULL DEFAULT 'N'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='User groups with configured menu items';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pma__users`
+--
+
+CREATE TABLE `pma__users` (
+  `username` varchar(64) NOT NULL,
+  `usergroup` varchar(64) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='Users and their assignments to user groups';
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `pma__bookmark`
+--
+ALTER TABLE `pma__bookmark`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `pma__central_columns`
+--
+ALTER TABLE `pma__central_columns`
+  ADD PRIMARY KEY (`db_name`,`col_name`);
+
+--
+-- Indexes for table `pma__column_info`
+--
+ALTER TABLE `pma__column_info`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `db_name` (`db_name`,`table_name`,`column_name`);
+
+--
+-- Indexes for table `pma__designer_settings`
+--
+ALTER TABLE `pma__designer_settings`
+  ADD PRIMARY KEY (`username`);
+
+--
+-- Indexes for table `pma__export_templates`
+--
+ALTER TABLE `pma__export_templates`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `u_user_type_template` (`username`,`export_type`,`template_name`);
+
+--
+-- Indexes for table `pma__favorite`
+--
+ALTER TABLE `pma__favorite`
+  ADD PRIMARY KEY (`username`);
+
+--
+-- Indexes for table `pma__history`
+--
+ALTER TABLE `pma__history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `username` (`username`,`db`,`table`,`timevalue`);
+
+--
+-- Indexes for table `pma__navigationhiding`
+--
+ALTER TABLE `pma__navigationhiding`
+  ADD PRIMARY KEY (`username`,`item_name`,`item_type`,`db_name`,`table_name`);
+
+--
+-- Indexes for table `pma__pdf_pages`
+--
+ALTER TABLE `pma__pdf_pages`
+  ADD PRIMARY KEY (`page_nr`),
+  ADD KEY `db_name` (`db_name`);
+
+--
+-- Indexes for table `pma__recent`
+--
+ALTER TABLE `pma__recent`
+  ADD PRIMARY KEY (`username`);
+
+--
+-- Indexes for table `pma__relation`
+--
+ALTER TABLE `pma__relation`
+  ADD PRIMARY KEY (`master_db`,`master_table`,`master_field`),
+  ADD KEY `foreign_field` (`foreign_db`,`foreign_table`);
+
+--
+-- Indexes for table `pma__savedsearches`
+--
+ALTER TABLE `pma__savedsearches`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `u_savedsearches_username_dbname` (`username`,`db_name`,`search_name`);
+
+--
+-- Indexes for table `pma__table_coords`
+--
+ALTER TABLE `pma__table_coords`
+  ADD PRIMARY KEY (`db_name`,`table_name`,`pdf_page_number`);
+
+--
+-- Indexes for table `pma__table_info`
+--
+ALTER TABLE `pma__table_info`
+  ADD PRIMARY KEY (`db_name`,`table_name`);
+
+--
+-- Indexes for table `pma__table_uiprefs`
+--
+ALTER TABLE `pma__table_uiprefs`
+  ADD PRIMARY KEY (`username`,`db_name`,`table_name`);
+
+--
+-- Indexes for table `pma__tracking`
+--
+ALTER TABLE `pma__tracking`
+  ADD PRIMARY KEY (`db_name`,`table_name`,`version`);
+
+--
+-- Indexes for table `pma__userconfig`
+--
+ALTER TABLE `pma__userconfig`
+  ADD PRIMARY KEY (`username`);
+
+--
+-- Indexes for table `pma__usergroups`
+--
+ALTER TABLE `pma__usergroups`
+  ADD PRIMARY KEY (`usergroup`,`tab`,`allowed`);
+
+--
+-- Indexes for table `pma__users`
+--
+ALTER TABLE `pma__users`
+  ADD PRIMARY KEY (`username`,`usergroup`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `pma__bookmark`
+--
+ALTER TABLE `pma__bookmark`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `pma__column_info`
+--
+ALTER TABLE `pma__column_info`
+  MODIFY `id` int(5) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `pma__export_templates`
+--
+ALTER TABLE `pma__export_templates`
+  MODIFY `id` int(5) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `pma__history`
+--
+ALTER TABLE `pma__history`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `pma__pdf_pages`
+--
+ALTER TABLE `pma__pdf_pages`
+  MODIFY `page_nr` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `pma__savedsearches`
+--
+ALTER TABLE `pma__savedsearches`
+  MODIFY `id` int(5) UNSIGNED NOT NULL AUTO_INCREMENT;
+--
+-- Database: `test`
+--
+CREATE DATABASE IF NOT EXISTS `test` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+USE `test`;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
